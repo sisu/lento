@@ -6,8 +6,8 @@ import java.awt.geom.*;
  *
  */
 class Bullet {
-	private Point2D.Float location;
-	private Point2D.Float speedVec;
+	Point2D.Float location;
+	Point2D.Float speedVec;
 
 	/* Päivittää ammuksen sijainnin ja nopeusvektorin.
 	 * @return vanha sijainti
