@@ -5,6 +5,6 @@ import java.awt.*;
 /**
  * Värillinen polygoni.
  */
-class ColoredPolygon extends Polygon {
+public class ColoredPolygon extends Polygon {
 	public Color color;
 };

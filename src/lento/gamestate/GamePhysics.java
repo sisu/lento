@@ -2,12 +2,12 @@ package lento.gamestate;
 
 import java.util.*;
 import java.awt.geom.*;
-import java.io.IOException;
+import java.io.*;
 
 /*
  * GamePhysics pitää kirjaa pelialueesta ja kaikista pelin pelaajista ja ammuksista, ja huolehtii näiden päivityksistä.
  */
-class GamePhysics {
+public class GamePhysics {
 
 	static final float GRAVITY = 1.0f;
 //	static final float 
@@ -16,8 +16,8 @@ class GamePhysics {
 	private ArrayList<Player> players = new ArrayList<Player>();
 	private ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 
-	public GamePhysics(String filename) throws IOException {
-		geometry = new AreaGeometry(filename);
+	public GamePhysics(File file) throws IOException {
+		geometry = new AreaGeometry(file);
 	}
 	public GamePhysics() {
 		geometry = new AreaGeometry();
@@ -41,10 +41,13 @@ class GamePhysics {
 	public void addBullet(Bullet b) {
 		bullets.add(b);
 	}
-	public float createLocalBullets(Player localPlayer, float time, float lastShot, float energy) {
+	public float createLocalBullets(Player localPlayer, float time, float lastShot) {
 		return 0;
 	}
 
 	private void checkHit(Point2D.Float p, Point2D.Float start, Point2D.Float end) {
+	}
+	public AreaGeometry getGeometry() {
+		return geometry;
 	}
 };

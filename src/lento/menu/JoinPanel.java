@@ -16,7 +16,7 @@ class JoinPanel extends JPanel {
 		netChoose.add(new JLabel("Kirjoita domain-nimi tai IP-osoite"));
 		netChoose.add(hostField = new JTextField());
 		netChoose.add(new JLabel("Kirjoita porttinumero"));
-		netChoose.add(portField = new JTextField("46972"));
+		netChoose.add(portField = new JTextField("46972")); // FIXME: default-portti jostain definestä
 		add(netChoose);
 
 		JButton join = new JButton("Liity peliin");

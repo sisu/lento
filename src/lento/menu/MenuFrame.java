@@ -1,9 +1,11 @@
 package lento.menu;
 
+import lento.gameui.*;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.*;
 
 public class MenuFrame extends JFrame implements ActionListener {
 
@@ -17,9 +19,9 @@ public class MenuFrame extends JFrame implements ActionListener {
 
 		Container content = getContentPane();
 		content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
-		content.add(playerInfo = new PlayerInfoPanel());
-		content.add(host = new HostPanel(this));
-		content.add(join = new JoinPanel(this));
+		add(playerInfo = new PlayerInfoPanel());
+		add(host = new HostPanel(this));
+		add(join = new JoinPanel(this));
 
 		Border br = BorderFactory.createLineBorder(Color.black);
 		playerInfo.setBorder(br);
@@ -28,6 +30,34 @@ public class MenuFrame extends JFrame implements ActionListener {
 
 		pack();
 	}
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent ae) {
+		String action = ae.getActionCommand();
+		System.out.println(action);
+		try {
+			GameLoop loop=null;
+			setVisible(false);
+			if (action.equals("host")) {
+				loop = new GameLoop(new File(host.filename.getText()));
+			} else if (action.equals("join")) {
+			}
+			if (loop!=null) {
+				new GameStarter(loop,this).start();
+			}
+		} catch(IOException e) {
+			System.out.println(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	private class GameStarter extends Thread {
+		private GameLoop loop;
+		MenuFrame menu;
+		GameStarter(GameLoop loop, MenuFrame menu) {
+			this.loop = loop;
+			this.menu = menu;
+		}
+		public void run() {
+			loop.start();
+			menu.setVisible(true);
+		}
 	}
 }

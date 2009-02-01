@@ -25,13 +25,13 @@ class HostPanel extends JPanel implements ActionListener {
 		add(fileChoose);
 
 		JButton b = new JButton("Luo uusi peli");
-		b.setActionCommand("new");
+		b.setActionCommand("host");
 		b.addActionListener(listener);
 		add(b);
 	}
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("browse")) {
-			JFileChooser fc = new JFileChooser();
+			JFileChooser fc = new JFileChooser("./lev/");
 			int retVal = fc.showOpenDialog(this);
 			if (retVal==JFileChooser.APPROVE_OPTION) {
 				String name = fc.getSelectedFile().getAbsolutePath();

@@ -5,7 +5,7 @@ import java.awt.geom.*;
 /*
  *
  */
-class Bullet {
+public class Bullet {
 	Point2D.Float location;
 	Point2D.Float speedVec;
 
