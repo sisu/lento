@@ -2,6 +2,7 @@ package lento.gameui;
 
 import lento.gamestate.*;
 import java.io.*;
+import java.awt.*;
 
 public class GameLoop {
 
@@ -9,8 +10,8 @@ public class GameLoop {
 	private LocalPlayer localPlayer;
 	boolean done=false;
 
-	public GameLoop(File file) throws IOException {
-		localPlayer = new LocalPlayer(this);
+	public GameLoop(File file, String name, Color color) throws IOException {
+		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics(file);
 		physics.addPlayer(localPlayer);
 	}
@@ -28,7 +29,20 @@ public class GameLoop {
 //			System.out.println("loop");
 			long time = System.nanoTime();
 			float diff = (time-prevTime)/1e9f;
+
+			if (time/(1000*1000*1000) > prevTime/(1000*1000*1000)) {
+				System.out.println(frame.frameCount+"frames");
+				frame.frameCount=0;
+			}
+
 			prevTime = time;
+
+			boolean spawned = false;
+			if (!localPlayer.isAlive() && time>=localPlayer.spawnTime) {
+				localPlayer.spawn(physics.getGeometry().getSpawnPoint());
+				spawned = true;
+				System.out.println("local spawn!");
+			}
 
 			physics.update(diff, localPlayer);
 			if (localPlayer.shooting)
@@ -36,7 +50,8 @@ public class GameLoop {
 
 			frame.repaint();
 
-			Thread.sleep(10);
+			Thread.sleep(1);
+			if (1==2) throw new InterruptedException();
 		}
 		}catch(InterruptedException e){}
 

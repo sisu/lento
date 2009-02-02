@@ -37,7 +37,7 @@ public class MenuFrame extends JFrame implements ActionListener {
 			GameLoop loop=null;
 			setVisible(false);
 			if (action.equals("host")) {
-				loop = new GameLoop(new File(host.filename.getText()));
+				loop = new GameLoop(new File(host.filename.getText()), playerInfo.nameField.getText(), playerInfo.color);
 			} else if (action.equals("join")) {
 			}
 			if (loop!=null) {
