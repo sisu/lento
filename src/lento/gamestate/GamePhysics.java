@@ -34,6 +34,7 @@ public class GamePhysics {
 					Point2D.Float normal = coll.normal;
 					Point2D.Float loc = coll.location;
 					float dot = normal.x*speed.x + normal.y*speed.y;
+			//		if (dot>=0) System.out.printf("wtf %f\n", dot);
 					speed.x -= 2*dot*normal.x;
 					speed.y -= 2*dot*normal.y;
 					speed.x *= .9f;
@@ -41,8 +42,8 @@ public class GamePhysics {
 
 					float dist = (float)pl.location.distance(loc);
 
-					pl.location.x = loc.x + dist*speed.x*time;
-					pl.location.y = loc.y + dist*speed.y*time;
+					pl.location.x = loc.x + .5f*dist*speed.x*time;
+					pl.location.y = loc.y + .5f*dist*speed.y*time;
 
 					final float eps = 1e-6f;
 					pl.prevLocation.x = loc.x+speed.x*eps;

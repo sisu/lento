@@ -24,8 +24,8 @@ public class NetListener implements Runnable {
 	static final int UDP_PLAYER_HIT = 0x12;
 
 	GamePhysics physics;
-	private ArrayList<NetPlayer> players = new ArrayList<NetPlayer>();
-	private ServerSocket tcpSocket;
+	ArrayList<NetPlayer> players = new ArrayList<NetPlayer>();
+	ServerSocket tcpSocket;
 
 	public NetListener(GamePhysics physics) throws IOException {
 		this.physics = physics;
@@ -39,13 +39,17 @@ public class NetListener implements Runnable {
 	}
 	private ServerSocket openServerSocket() throws IOException {
 		ServerSocket s;
-		try {
-			s = new ServerSocket(DEFAULT_TCP_PORT);
-		} catch(BindException e) {
-			System.out.println("Failed binding to default port");
-			s = new ServerSocket();
-			System.out.println("Binded to port "+s.getLocalPort());
-		}
+		int port = DEFAULT_TCP_PORT;
+		do {
+			try {
+				s = new ServerSocket(port);
+			} catch(BindException e) {
+				System.out.println("Failed binding to port "+port);
+				s = null;
+				++port;
+			}
+		} while(s==null);
+		System.out.println("Binded to port "+port);
 		return s;
 	}
 
@@ -70,6 +74,7 @@ public class NetListener implements Runnable {
 		DataOutputStream out = new DataOutputStream(initial.getOutputStream());
 		DataInputStream in = new DataInputStream(initial.getInputStream());
 		getAreaInfo(in,out);
+		getPlayerInfo(in,out);
 	}
 	private void getAreaInfo(DataInputStream in,DataOutputStream out) throws IOException {
 		out.write(TCP_GET_AREA_INFO);
@@ -82,7 +87,7 @@ public class NetListener implements Runnable {
 			throw new IOException("Aluetietojen pyytäminen epäonnistui.");
 		int wSize = in.readInt();
 		int hSize = in.readInt();
-		geom.setSize(wSize, hSize);
+		geom.resetArea(wSize, hSize);
 
 		System.out.printf("got sizes: %d %d\n", wSize,hSize);
 
@@ -91,8 +96,10 @@ public class NetListener implements Runnable {
 		geom.setBorderColor(bColor);
 
 		int amount = in.readUnsignedShort();
+		System.out.println("amount: "+amount);
 		for(int i=0; i<amount; ++i) {
 			int count = in.readUnsignedShort();
+			System.out.println("count: "+count);
 			ColoredPolygon poly = new ColoredPolygon();
 			poly.color = readColor(in);
 			for(int j=0; j<count; ++j) {
@@ -102,6 +109,15 @@ public class NetListener implements Runnable {
 			geom.addPolygon(poly);
 		}
 	}
+	private void getPlayerInfo(DataInputStream in, DataOutputStream out) throws IOException {
+		out.write(TCP_GET_PLAYER_INFO);
+		out.flush();
+
+		int reply = in.read();
+		if (reply!=TCP_PLAYER_INFO)
+			throw new IOException("Pelaajatietojen kysyminen epäonnistui: "+reply);
+	}
+
 	public void cleanUp() throws IOException {
 		for(Iterator<NetPlayer> i=players.iterator(); i.hasNext(); ) {
 			NetPlayer pl = i.next();
@@ -109,11 +125,8 @@ public class NetListener implements Runnable {
 			pl.socket.close();
 		}
 	}
-	GamePhysics getPhysics() {
-		return physics;
-	}
 	private static Color readColor(DataInputStream in) throws IOException {
-		int r=in.readByte(), g=in.readByte(), b=in.readByte();
+		int r=in.readUnsignedByte(), g=in.readUnsignedByte(), b=in.readUnsignedByte();
 		System.out.printf("Got color: %d %d %d\n", r,g,b);
 		return new Color(r,g,b);
 	}

@@ -42,6 +42,9 @@ class NetPlayer extends Player implements Runnable {
 			case NetListener.TCP_GET_AREA_INFO:
 				sendAreaInfo();
 				break;
+			case NetListener.TCP_GET_PLAYER_INFO:
+				sendPlayerInfo();
+				break;
 			default:
 				System.out.println("Warning: unknown packet type "+type);
 				break;
@@ -51,14 +54,14 @@ class NetPlayer extends Player implements Runnable {
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_AREA_INFO);
 
-		AreaGeometry area = listener.getPhysics().getGeometry();
+		AreaGeometry area = listener.physics.getGeometry();
 		out.writeInt(area.getWidth());
 		out.writeInt(area.getHeight());
 
 		writeColor(out, area.getBorderColor());
 
 		ArrayList<ColoredPolygon> polys = area.getPolygons();
-		out.writeInt(polys.size());
+		out.writeShort(polys.size());
 		for(Iterator<ColoredPolygon> i=polys.iterator(); i.hasNext(); ) {
 			ColoredPolygon p = i.next();
 			out.writeShort(p.npoints);
@@ -69,7 +72,41 @@ class NetPlayer extends Player implements Runnable {
 				out.writeFloat(p.ypoints[j]);
 			}
 		}
+		out.flush();
 	}
+	private void sendPlayerInfo() throws IOException {
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		out.write(NetListener.TCP_PLAYER_INFO);
+
+		ArrayList<NetPlayer> players = listener.players;
+		// FIXME: lähetä vain oikeasti liittyneet pelaajat
+		out.write(players.size()+1);
+		sendSinglePlayer(out,this);
+		for(Iterator<NetPlayer> i=players.iterator(); i.hasNext(); ) {
+			NetPlayer p = i.next();
+			sendSinglePlayer(out,p);
+		}
+
+		out.flush();
+	}
+	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
+		out.write(p.socket.getInetAddress().getAddress(), 0, 4);
+		out.writeShort(p.socket.getPort());
+		out.writeShort(0); // FIXME: send UDP port
+		out.write(p.id);
+		
+		byte[] name = p.name.getBytes("UTF-8");
+		out.write(name.length);
+		out.write(name, 0, name.length);
+
+		writeColor(out,p.color);
+
+		out.writeInt(p.kills);
+		out.writeInt(p.deaths);
+		out.writeInt(p.damageDone);
+		out.writeInt(p.damageTaken);
+	}
+
 	private static void writeColor(DataOutputStream out, Color c) throws IOException {
 		System.out.printf("sending colors: %d %d %d\n", c.getRed(),c.getGreen(),c.getBlue());
 		out.write(c.getRed());

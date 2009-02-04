@@ -29,8 +29,8 @@ public class AreaGeometry {
 			Point2D.Float c = e.start;
 			Point2D.Float d = e.end;
 
-			if (crosspf(a.x,a.y,b.x,b.y,c.x,c.y)*crosspf(a.x,a.y,b.x,b.y,d.x,d.y) < 0
-				&& crosspf(c.x,c.y,d.x,d.y,a.x,a.y)*crosspf(c.x,c.y,d.x,d.y,b.x,b.y) < 0)
+			if (crosspf(a.x,a.y,b.x,b.y,c.x,c.y)*crosspf(a.x,a.y,b.x,b.y,d.x,d.y) <= 0
+				&& crosspf(c.x,c.y,d.x,d.y,a.x,a.y)*crosspf(c.x,c.y,d.x,d.y,b.x,b.y) <= 0)
 			{
 				System.out.println("hit");
 				float dax=b.x-a.x;
@@ -173,9 +173,18 @@ public class AreaGeometry {
 		return borderColor;
 	}
 
-	public void setSize(int w, int h) {
+	public void resetArea(int w, int h) {
+		edges.clear();
+		polygons.clear();
+		setSize(w,h);
+	}
+	private void setSize(int w, int h) {
 		sizeW = w;
 		sizeH = h;
+		addEdge(0,0,w,0,1);
+		addEdge(w,0,w,h,1);
+		addEdge(w,h,0,h,1);
+		addEdge(0,h,0,0,1);
 	}
 	public void setBorderColor(Color c) {
 		borderColor = c;
