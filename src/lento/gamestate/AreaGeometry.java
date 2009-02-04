@@ -12,8 +12,8 @@ public class AreaGeometry {
 
 	private ArrayList<ColoredPolygon> polygons = new ArrayList<ColoredPolygon>();
 	private ArrayList<Edge> edges = new ArrayList<Edge>();
-	private int sizeW,sizeH;
-	Color borderColor;
+	private int sizeW=0,sizeH=0;
+	Color borderColor=null;
 
 	AreaGeometry(File file) throws IOException {
 		readFile(file);
@@ -171,5 +171,17 @@ public class AreaGeometry {
 	}
 	public Color getBorderColor() {
 		return borderColor;
+	}
+
+	public void setSize(int w, int h) {
+		sizeW = w;
+		sizeH = h;
+	}
+	public void setBorderColor(Color c) {
+		borderColor = c;
+	}
+	public void addPolygon(ColoredPolygon poly) {
+		polygons.add(poly);
+		addEdges(poly);
 	}
 }

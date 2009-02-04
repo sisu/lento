@@ -8,8 +8,9 @@ import java.awt.geom.*;
  */
 public class Player {
 
-	private final float ACCEL_SPEED = 200.0f;
-	private final float TURN_SPEED = 1.0f;
+	private final float ACCEL_SPEED = 800.0f;
+	private final float MAX_SPEED = 700;
+	private final float TURN_SPEED = 5.0f;
 
 	protected String name="";
 	protected int kills=0, deaths=0, damageDone=0, damageTaken=0;
@@ -45,8 +46,9 @@ public class Player {
 			float sa = (float)Math.sin(angle);
 			float ca = (float)Math.cos(angle);
 
-			speedVec.x += ca*time*ACCEL_SPEED;
-			speedVec.y -= sa*time*ACCEL_SPEED;
+			final float slowDown = ACCEL_SPEED/MAX_SPEED;
+			speedVec.x += ca*time*ACCEL_SPEED - time*speedVec.x*slowDown;
+			speedVec.y += -sa*time*ACCEL_SPEED - time*speedVec.y*slowDown;
 		}
 		location.x += .5f*(prevVX+speedVec.x)*time;
 		location.y += .5f*(prevVY+speedVec.y)*time;

@@ -6,6 +6,7 @@ import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.net.*;
 
 public class MenuFrame extends JFrame implements ActionListener {
 
@@ -35,15 +36,19 @@ public class MenuFrame extends JFrame implements ActionListener {
 		System.out.println(action);
 		try {
 			GameLoop loop=null;
-			setVisible(false);
+			String name=playerInfo.nameField.getText();
+			Color color = playerInfo.color;
 			if (action.equals("host")) {
-				loop = new GameLoop(new File(host.filename.getText()), playerInfo.nameField.getText(), playerInfo.color);
+				loop = new GameLoop(new File(host.filename.getText()), name, color);
 			} else if (action.equals("join")) {
+				InetAddress addr = InetAddress.getByName(join.hostField.getText());
+				int port = Integer.parseInt(join.portField.getText());
+				loop = new GameLoop(addr,port,name,color);
 			}
 			if (loop!=null) {
 				new GameStarter(loop,this).start();
 			}
-		} catch(IOException e) {
+		} catch(Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
@@ -56,7 +61,12 @@ public class MenuFrame extends JFrame implements ActionListener {
 			this.menu = menu;
 		}
 		public void run() {
-			loop.start();
+			menu.setVisible(false);
+			try {
+				loop.start();
+			} catch(IOException e) {
+				e.printStackTrace();
+			}
 			menu.setVisible(true);
 		}
 	}

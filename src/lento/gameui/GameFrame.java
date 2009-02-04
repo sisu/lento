@@ -27,6 +27,7 @@ class GameFrame extends JFrame {
 		createBufferStrategy(2);
 	}
 	public void repaint() {
+//		System.out.println("jee");
 		BufferStrategy bs = getBufferStrategy();
 		Graphics g=null;
 		try {
@@ -36,6 +37,7 @@ class GameFrame extends JFrame {
 			g.dispose();
 		}
 		bs.show();
+		Toolkit.getDefaultToolkit().sync();
 	}
 
 	public void paint(Graphics g) {

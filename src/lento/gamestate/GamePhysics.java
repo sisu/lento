@@ -38,17 +38,15 @@ public class GamePhysics {
 					speed.y -= 2*dot*normal.y;
 					speed.x *= .9f;
 					speed.y *= .9f;
-					float origDist = (float)pl.location.distance(pl.prevLocation);
 
-					float collDist = (float)pl.location.distance(loc);
-					float dist = origDist-collDist;
+					float dist = (float)pl.location.distance(loc);
 
 					pl.location.x = loc.x + dist*speed.x*time;
 					pl.location.y = loc.y + dist*speed.y*time;
 
-					final float eps = 1e-10f;
-					pl.prevLocation.x += eps*speed.x;
-					pl.prevLocation.y += eps*speed.y;
+					final float eps = 1e-6f;
+					pl.prevLocation.x = loc.x+speed.x*eps;
+					pl.prevLocation.y = loc.y+speed.y*eps;
 
 					coll = geometry.getCollision(pl.prevLocation, pl.location);
 				}
@@ -84,5 +82,8 @@ public class GamePhysics {
 	}
 	public ArrayList<Bullet> getBullets() {
 		return bullets;
+	}
+	public void deletePlayer(Player pl) {
+		players.remove(pl);
 	}
 };
