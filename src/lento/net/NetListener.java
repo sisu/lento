@@ -29,6 +29,8 @@ public class NetListener implements Runnable {
 	DatagramSocket udpSocket = new DatagramSocket();
 	Player localPlayer;
 
+	private int waitCount=0;
+
 	public NetListener(GamePhysics physics, Player localPlayer) throws IOException {
 		this.physics = physics;
 		this.localPlayer = localPlayer;
@@ -79,6 +81,7 @@ public class NetListener implements Runnable {
 		DataInputStream in = new DataInputStream(initial.getInputStream());
 		getAreaInfo(in,out);
 		getPlayerInfo(in,out,initial);
+		requestJoins();
 	}
 	private void getAreaInfo(DataInputStream in,DataOutputStream out) throws IOException {
 		out.write(TCP_GET_AREA_INFO);
@@ -125,6 +128,18 @@ public class NetListener implements Runnable {
 		for(int i=0; i<count; ++i) {
 			NetPlayer pl = new NetPlayer(in, this, connected);
 			players.add(pl);
+			pl.requestJoin();
+		}
+	}
+	private synchronized void requestJoins() throws IOException {
+		waitCount = players.size();
+		for(NetPlayer p : players)
+			p.requestJoin();
+		while(waitCount>0) {
+			try {
+				wait();
+			} catch(InterruptedException e) {
+			}
 		}
 	}
 
@@ -134,6 +149,11 @@ public class NetListener implements Runnable {
 			pl.done = true;
 			pl.socket.close();
 		}
+	}
+
+	synchronized void gotJoinOK() {
+		--waitCount;
+		notify();
 	}
 
 	static Color readColor(DataInputStream in) throws IOException {
@@ -147,5 +167,4 @@ public class NetListener implements Runnable {
 		out.write(c.getGreen());
 		out.write(c.getBlue());
 	}
-
 }

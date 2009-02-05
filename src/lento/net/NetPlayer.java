@@ -12,6 +12,7 @@ class NetPlayer extends Player implements Runnable {
 	NetListener listener;
 	volatile boolean done=false;
 	int udpPort=0;
+	boolean waitingJoinOK = false;
 
 	NetPlayer(Socket socket, NetListener listener) {
 		this.socket = socket;
@@ -49,6 +50,12 @@ class NetPlayer extends Player implements Runnable {
 			case NetListener.TCP_JOIN_GAME:
 				handleJoinRequest();
 				break;
+			case NetListener.TCP_JOIN_OK:
+				if (waitingJoinOK) {
+					waitingJoinOK = false;
+					listener.gotJoinOK();
+				}
+				break;
 			default:
 				System.out.println("Warning: unknown TCP packet type "+type);
 				break;
@@ -85,6 +92,7 @@ class NetPlayer extends Player implements Runnable {
 		out.write(listener.physics.getPlayers().size());
 
 		// Lähetetään ensin paikallisen pelaajan tiedot
+		System.out.println("jee: "+listener.tcpSocket.getInetAddress().toString());
 		out.write(listener.tcpSocket.getInetAddress().getAddress(), 0, 4);
 		out.writeShort(listener.tcpSocket.getLocalPort());
 		out.writeShort(listener.udpSocket.getPort());
@@ -139,8 +147,10 @@ class NetPlayer extends Player implements Runnable {
 
 		if (connected.getInetAddress().equals(addr) && connected.getPort()==tcpPort)
 			socket = connected;
-		else
+		else {
 			socket = new Socket(addr, tcpPort);
+			System.out.println("opened new socket");
+		}
 
 		udpPort = in.readUnsignedShort();
 		id = in.readUnsignedByte();
@@ -156,5 +166,10 @@ class NetPlayer extends Player implements Runnable {
 		deaths = in.readInt();
 		damageDone = in.readInt();
 		damageTaken = in.readInt();
+	}
+	void requestJoin() throws IOException {
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		out.write(NetListener.TCP_JOIN_GAME);
+		waitingJoinOK = true;
 	}
 };
