@@ -46,8 +46,11 @@ class NetPlayer extends Player implements Runnable {
 			case NetListener.TCP_GET_PLAYER_INFO:
 				sendPlayerInfo();
 				break;
+			case NetListener.TCP_JOIN_GAME:
+				handleJoinRequest();
+				break;
 			default:
-				System.out.println("Warning: unknown packet type "+type);
+				System.out.println("Warning: unknown TCP packet type "+type);
 				break;
 		}
 	}
@@ -79,7 +82,6 @@ class NetPlayer extends Player implements Runnable {
 		out.write(NetListener.TCP_PLAYER_INFO);
 
 		ArrayList<NetPlayer> players = listener.players;
-		// FIXME: lähetä vain oikeasti liittyneet pelaajat
 		out.write(listener.physics.getPlayers().size());
 
 		// Lähetetään ensin paikallisen pelaajan tiedot
@@ -95,6 +97,15 @@ class NetPlayer extends Player implements Runnable {
 				sendSinglePlayer(out,p);
 
 		out.flush();
+	}
+	private void handleJoinRequest() throws IOException {
+		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		if (listener.physics.getPlayers().size() >= 127)
+			out.write(NetListener.TCP_JOIN_FAIL);
+		else {
+			out.write(NetListener.TCP_JOIN_OK);
+			listener.physics.addPlayer(this);
+		}
 	}
 	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
 		out.write(p.socket.getInetAddress().getAddress(), 0, 4);
