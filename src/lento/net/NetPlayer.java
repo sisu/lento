@@ -20,6 +20,7 @@ class NetPlayer extends Player implements Runnable {
 	}
 
 	public void run() {
+		System.out.println("NetPlayer thread started");
 		DataInputStream in=null;
 		try {
 			in = new DataInputStream(socket.getInputStream());
@@ -85,6 +86,7 @@ class NetPlayer extends Player implements Runnable {
 		out.flush();
 	}
 	private void sendPlayerInfo() throws IOException {
+		System.out.println("asd");
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_PLAYER_INFO);
 
@@ -107,12 +109,14 @@ class NetPlayer extends Player implements Runnable {
 		out.flush();
 	}
 	private void handleJoinRequest() throws IOException {
+		System.out.println("got join request");
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		if (listener.physics.getPlayers().size() >= 127)
 			out.write(NetListener.TCP_JOIN_FAIL);
 		else {
 			out.write(NetListener.TCP_JOIN_OK);
 			listener.physics.addPlayer(this);
+			System.out.println("OK sent");
 		}
 	}
 	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
@@ -135,9 +139,18 @@ class NetPlayer extends Player implements Runnable {
 			out.writeInt(s);
 	}
 
-	NetPlayer(DataInputStream in, NetListener listener, Socket connected) throws IOException {
+	NetPlayer(DataInputStream in, NetListener listener) throws IOException {
 		this.listener = listener;
+		this.socket = null;
+		readClientData(in);
+	}
+	NetPlayer(DataInputStream in, NetListener listener, Socket socket) throws IOException {
+		this.listener = listener;
+		this.socket = socket;
+		readClientData(in);
+	}
 
+	void readClientData(DataInputStream in) throws IOException {
 		byte[] buf = new byte[4];
 		in.readFully(buf);
 		InetAddress addr = InetAddress.getByAddress(buf);
@@ -145,9 +158,7 @@ class NetPlayer extends Player implements Runnable {
 
 		System.out.println("got address and port: "+addr.toString()+" "+tcpPort);
 
-		if (connected.getInetAddress().equals(addr) && connected.getPort()==tcpPort)
-			socket = connected;
-		else {
+		if (socket==null) {
 			socket = new Socket(addr, tcpPort);
 			System.out.println("opened new socket");
 		}
@@ -168,8 +179,8 @@ class NetPlayer extends Player implements Runnable {
 		damageTaken = in.readInt();
 	}
 	void requestJoin() throws IOException {
+		waitingJoinOK = true;
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_JOIN_GAME);
-		waitingJoinOK = true;
 	}
 };

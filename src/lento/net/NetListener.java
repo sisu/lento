@@ -81,6 +81,8 @@ public class NetListener implements Runnable {
 		DataInputStream in = new DataInputStream(initial.getInputStream());
 		getAreaInfo(in,out);
 		getPlayerInfo(in,out,initial);
+		for(NetPlayer p : players)
+			new Thread(p).start();
 		requestJoins();
 	}
 	private void getAreaInfo(DataInputStream in,DataOutputStream out) throws IOException {
@@ -106,7 +108,7 @@ public class NetListener implements Runnable {
 		System.out.println("amount: "+amount);
 		for(int i=0; i<amount; ++i) {
 			int count = in.readUnsignedShort();
-			System.out.println("count: "+count);
+			System.out.println("vertex count: "+count);
 			ColoredPolygon poly = new ColoredPolygon();
 			poly.color = readColor(in);
 			for(int j=0; j<count; ++j) {
@@ -125,17 +127,25 @@ public class NetListener implements Runnable {
 			throw new IOException("Pelaajatietojen kysyminen epäonnistui: "+reply);
 
 		int count = in.readUnsignedByte();
-		for(int i=0; i<count; ++i) {
-			NetPlayer pl = new NetPlayer(in, this, connected);
+
+		System.out.println("player count: "+count);
+
+		// Ensimmäisenä saadaan vastaajan omat tiedot
+		NetPlayer current = new NetPlayer(in, this, connected);
+		players.add(current);
+
+		for(int i=0; i<count-1; ++i) {
+			NetPlayer pl = new NetPlayer(in, this);
 			players.add(pl);
-			pl.requestJoin();
 		}
 	}
 	private synchronized void requestJoins() throws IOException {
 		waitCount = players.size();
+		System.out.println("players to wait for: "+waitCount);
 		for(NetPlayer p : players)
 			p.requestJoin();
 		while(waitCount>0) {
+			System.out.println("waiting: "+waitCount);
 			try {
 				wait();
 			} catch(InterruptedException e) {
