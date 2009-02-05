@@ -26,13 +26,17 @@ public class NetListener implements Runnable {
 	GamePhysics physics;
 	ArrayList<NetPlayer> players = new ArrayList<NetPlayer>();
 	ServerSocket tcpSocket;
+	DatagramSocket udpSocket = new DatagramSocket();
+	Player localPlayer;
 
-	public NetListener(GamePhysics physics) throws IOException {
+	public NetListener(GamePhysics physics, Player localPlayer) throws IOException {
 		this.physics = physics;
+		this.localPlayer = localPlayer;
 		tcpSocket = openServerSocket();
 	}
-	public NetListener(GamePhysics physics, InetAddress addr, int port) throws IOException {
+	public NetListener(GamePhysics physics, Player localPlayer, InetAddress addr, int port) throws IOException {
 		this.physics = physics;
+		this.localPlayer = localPlayer;
 		tcpSocket = openServerSocket();
 		Socket socket = new Socket(addr,port);
 		handleJoin(socket);
@@ -74,7 +78,7 @@ public class NetListener implements Runnable {
 		DataOutputStream out = new DataOutputStream(initial.getOutputStream());
 		DataInputStream in = new DataInputStream(initial.getInputStream());
 		getAreaInfo(in,out);
-		getPlayerInfo(in,out);
+		getPlayerInfo(in,out,initial);
 	}
 	private void getAreaInfo(DataInputStream in,DataOutputStream out) throws IOException {
 		out.write(TCP_GET_AREA_INFO);
@@ -109,13 +113,19 @@ public class NetListener implements Runnable {
 			geom.addPolygon(poly);
 		}
 	}
-	private void getPlayerInfo(DataInputStream in, DataOutputStream out) throws IOException {
+	private void getPlayerInfo(DataInputStream in, DataOutputStream out, Socket connected) throws IOException {
 		out.write(TCP_GET_PLAYER_INFO);
 		out.flush();
 
 		int reply = in.read();
 		if (reply!=TCP_PLAYER_INFO)
 			throw new IOException("Pelaajatietojen kysyminen epäonnistui: "+reply);
+
+		int count = in.readUnsignedByte();
+		for(int i=0; i<count; ++i) {
+			NetPlayer pl = new NetPlayer(in, this, connected);
+			players.add(pl);
+		}
 	}
 
 	public void cleanUp() throws IOException {
@@ -125,9 +135,17 @@ public class NetListener implements Runnable {
 			pl.socket.close();
 		}
 	}
-	private static Color readColor(DataInputStream in) throws IOException {
+
+	static Color readColor(DataInputStream in) throws IOException {
 		int r=in.readUnsignedByte(), g=in.readUnsignedByte(), b=in.readUnsignedByte();
 		System.out.printf("Got color: %d %d %d\n", r,g,b);
 		return new Color(r,g,b);
 	}
+	static void writeColor(DataOutputStream out, Color c) throws IOException {
+		System.out.printf("sending colors: %d %d %d\n", c.getRed(),c.getGreen(),c.getBlue());
+		out.write(c.getRed());
+		out.write(c.getGreen());
+		out.write(c.getBlue());
+	}
+
 }

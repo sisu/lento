@@ -11,6 +11,7 @@ class NetPlayer extends Player implements Runnable {
 	Socket socket;
 	NetListener listener;
 	volatile boolean done=false;
+	int udpPort=0;
 
 	NetPlayer(Socket socket, NetListener listener) {
 		this.socket = socket;
@@ -58,14 +59,13 @@ class NetPlayer extends Player implements Runnable {
 		out.writeInt(area.getWidth());
 		out.writeInt(area.getHeight());
 
-		writeColor(out, area.getBorderColor());
+		NetListener.writeColor(out, area.getBorderColor());
 
 		ArrayList<ColoredPolygon> polys = area.getPolygons();
 		out.writeShort(polys.size());
-		for(Iterator<ColoredPolygon> i=polys.iterator(); i.hasNext(); ) {
-			ColoredPolygon p = i.next();
+		for(ColoredPolygon p : polys) {
 			out.writeShort(p.npoints);
-			writeColor(out, p.color);
+			NetListener.writeColor(out, p.color);
 
 			for(int j=0; j<p.npoints; ++j) {
 				out.writeFloat(p.xpoints[j]);
@@ -80,37 +80,70 @@ class NetPlayer extends Player implements Runnable {
 
 		ArrayList<NetPlayer> players = listener.players;
 		// FIXME: lähetä vain oikeasti liittyneet pelaajat
-		out.write(players.size()+1);
-		sendSinglePlayer(out,this);
-		for(Iterator<NetPlayer> i=players.iterator(); i.hasNext(); ) {
-			NetPlayer p = i.next();
-			sendSinglePlayer(out,p);
-		}
+		out.write(listener.physics.getPlayers().size());
+
+		// Lähetetään ensin paikallisen pelaajan tiedot
+		out.write(listener.tcpSocket.getInetAddress().getAddress(), 0, 4);
+		out.writeShort(listener.tcpSocket.getLocalPort());
+		out.writeShort(listener.udpSocket.getPort());
+		out.write(listener.localPlayer.getID());
+
+		sendSinglePlayerData(out, listener.localPlayer);
+
+		for(NetPlayer p : players)
+			if (p.id >= 0)
+				sendSinglePlayer(out,p);
 
 		out.flush();
 	}
 	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
 		out.write(p.socket.getInetAddress().getAddress(), 0, 4);
 		out.writeShort(p.socket.getPort());
-		out.writeShort(0); // FIXME: send UDP port
+		out.writeShort(p.udpPort);
 		out.write(p.id);
-		
-		byte[] name = p.name.getBytes("UTF-8");
+		sendSinglePlayerData(out,p);
+	}
+	private void sendSinglePlayerData(DataOutputStream out, Player p) throws IOException {
+		byte[] name = p.getName().getBytes("UTF-8");
 		out.write(name.length);
 		out.write(name, 0, name.length);
 
-		writeColor(out,p.color);
+		NetListener.writeColor(out,p.getColor());
 
-		out.writeInt(p.kills);
-		out.writeInt(p.deaths);
-		out.writeInt(p.damageDone);
-		out.writeInt(p.damageTaken);
+		int[] stats = p.getStats();
+		assert stats.length==4;
+		for(int s : stats)
+			out.writeInt(s);
 	}
 
-	private static void writeColor(DataOutputStream out, Color c) throws IOException {
-		System.out.printf("sending colors: %d %d %d\n", c.getRed(),c.getGreen(),c.getBlue());
-		out.write(c.getRed());
-		out.write(c.getGreen());
-		out.write(c.getBlue());
+	NetPlayer(DataInputStream in, NetListener listener, Socket connected) throws IOException {
+		this.listener = listener;
+
+		byte[] buf = new byte[4];
+		in.readFully(buf);
+		InetAddress addr = InetAddress.getByAddress(buf);
+		int tcpPort = in.readUnsignedShort();
+
+		System.out.println("got address and port: "+addr.toString()+" "+tcpPort);
+
+		if (connected.getInetAddress().equals(addr) && connected.getPort()==tcpPort)
+			socket = connected;
+		else
+			socket = new Socket(addr, tcpPort);
+
+		udpPort = in.readUnsignedShort();
+		id = in.readUnsignedByte();
+
+		int nameLen = in.readUnsignedByte();
+		buf = new byte[nameLen];
+		in.readFully(buf);
+		name = new String(buf, "UTF-8");
+
+		color = NetListener.readColor(in);
+
+		kills = in.readInt();
+		deaths = in.readInt();
+		damageDone = in.readInt();
+		damageTaken = in.readInt();
 	}
 };

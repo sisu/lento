@@ -24,8 +24,7 @@ public class AreaGeometry {
 	Collision getCollision(Point2D.Float a, Point2D.Float b) {
 //		System.out.printf("testing: %f %f - %f %f\n", a.x,a.y,b.x,b.y);
 		Collision res=null;
-		for(Iterator<Edge> i=edges.iterator(); i.hasNext(); ) {
-			Edge e = i.next();
+		for(Edge e : edges) {
 			Point2D.Float c = e.start;
 			Point2D.Float d = e.end;
 
@@ -124,8 +123,7 @@ public class AreaGeometry {
 			y=(float)(Math.random()*sizeH);
 
 			ok = true;
-			for(Iterator<ColoredPolygon> i=polygons.iterator(); i.hasNext(); ) {
-				Polygon p = i.next();
+			for(ColoredPolygon p : polygons) {
 				if (p.contains(x,y)) {
 					ok=false;
 					break;

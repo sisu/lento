@@ -24,8 +24,7 @@ public class GamePhysics {
 	}
 
 	public void update(float time, Player localPlayer) {
-		for(Iterator<Player> i=players.iterator(); i.hasNext(); ) {
-			Player pl = i.next();
+		for(Player pl : players) {
 			if (pl.isAlive()) {
 				pl.update(time);
 				Collision coll = geometry.getCollision(pl.prevLocation, pl.location);
@@ -53,11 +52,10 @@ public class GamePhysics {
 				}
 			}
 		}
-		for(Iterator<Bullet> i=bullets.iterator(); i.hasNext(); ) {
-			Bullet b = i.next();
+		for(Bullet b : bullets) {
 			Point2D.Float prevLoc = b.update(time);
-			for(Iterator<Player> j=players.iterator(); j.hasNext(); )
-				checkHit(j.next().location, prevLoc, b.location);
+			for(Player p : players)
+				checkHit(p.location, prevLoc, b.location);
 		}
 	}
 

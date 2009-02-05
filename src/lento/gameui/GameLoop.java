@@ -17,13 +17,13 @@ public class GameLoop {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics(file);
 		physics.addPlayer(localPlayer);
-		net = new NetListener(physics);
+		net = new NetListener(physics, localPlayer);
 	}
 	public GameLoop(InetAddress addr, int port, String name, Color color) throws IOException {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics();
 		physics.addPlayer(localPlayer);
-		net = new NetListener(physics, addr, port);
+		net = new NetListener(physics, localPlayer, addr, port);
 	}
 
 	public void start() throws IOException {

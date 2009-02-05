@@ -15,7 +15,7 @@ public class Player {
 	protected String name="";
 	protected int kills=0, deaths=0, damageDone=0, damageTaken=0;
 	protected Color color;
-	protected int id;
+	protected int id=-1;
 
 	Point2D.Float location=new Point2D.Float(0,0);
 	Point2D.Float speedVec=new Point2D.Float(0,0);
@@ -76,5 +76,14 @@ public class Player {
 	}
 	private static double fmod(double a, double b) {
 		return a-b*Math.floor(a/b);
+	}
+	public String getName() {
+		return name;
+	}
+	public int[] getStats() {
+		return new int[]{kills,deaths,damageDone,damageTaken};
+	}
+	public int getID() {
+		return id;
 	}
 }
