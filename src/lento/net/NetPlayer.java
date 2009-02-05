@@ -49,7 +49,7 @@ class NetPlayer extends Player implements Runnable {
 				sendPlayerInfo();
 				break;
 			case NetListener.TCP_JOIN_GAME:
-				handleJoinRequest();
+				handleJoinRequest(in);
 				break;
 			case NetListener.TCP_JOIN_OK:
 				if (waitingJoinOK) {
@@ -108,11 +108,23 @@ class NetPlayer extends Player implements Runnable {
 
 		out.flush();
 	}
-	private void handleJoinRequest() throws IOException {
+	private void handleJoinRequest(DataInputStream in) throws IOException {
 		System.out.println("got join request");
+
+		udpPort = in.readUnsignedShort();
+		id = in.read();
+
+		int nameLen = in.read();
+		byte[] buf = new byte[nameLen];
+		in.readFully(buf);
+		name = new String(buf, "UTF-8");
+		color = NetListener.readColor(in);
+
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-		if (listener.physics.getPlayers().size() >= 127)
+		if (listener.physics.getPlayers().size() >= 127) {
 			out.write(NetListener.TCP_JOIN_FAIL);
+			id = -1;
+		}
 		else {
 			out.write(NetListener.TCP_JOIN_OK);
 			listener.physics.addPlayer(this);
@@ -182,5 +194,27 @@ class NetPlayer extends Player implements Runnable {
 		waitingJoinOK = true;
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_JOIN_GAME);
+
+		out.writeShort(listener.udpSocket.getPort());
+		genID();
+		out.write(id);
+
+		byte[] name = listener.localPlayer.getName().getBytes("UTF-8");
+		out.write(name.length);
+		out.write(name, 0, name.length);
+
+		NetListener.writeColor(out, listener.localPlayer.getColor());
+	}
+	private void genID() {
+		boolean ok;
+		do {
+			ok = true;
+			id = (int)(Math.random()*128);
+			for(Player pl : listener.physics.getPlayers())
+				if (pl.getID()==id) {
+					ok=false;
+					break;
+				}
+		} while(!ok);
 	}
 };
