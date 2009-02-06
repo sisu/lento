@@ -5,6 +5,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.awt.*;
+import java.awt.geom.*;
 
 public class NetListener implements Runnable {
 
@@ -23,11 +24,17 @@ public class NetListener implements Runnable {
 	static final int UDP_PLAYER_SHOOT = 0x11;
 	static final int UDP_PLAYER_HIT = 0x12;
 
+	static final int IN_BUFFER_SIZE = 65536;
+	static final int OUT_BUFFER_SIZE = 65536;
+
 	GamePhysics physics;
 	ArrayList<NetPlayer> players = new ArrayList<NetPlayer>();
 	ServerSocket tcpSocket;
 	DatagramSocket udpSocket = new DatagramSocket();
 	Player localPlayer;
+	HashMap<ConnectionInfo,NetPlayer> playerTable = new HashMap<ConnectionInfo,NetPlayer>();
+
+	private DatagramPacket outPacket = new DatagramPacket(new byte[OUT_BUFFER_SIZE], OUT_BUFFER_SIZE);
 
 	private int waitCount=0;
 
@@ -60,6 +67,11 @@ public class NetListener implements Runnable {
 	}
 
 	public void run() {
+		new Thread(new Runnable() {
+			public void run() {
+				listenUDP();
+			}
+		}).start();
 		try {
 			while(true) {
 				Socket socket = tcpSocket.accept();
@@ -71,9 +83,27 @@ public class NetListener implements Runnable {
 			e.printStackTrace();
 		}
 	}
+	private void listenUDP() {
+		try {
+			byte[] buf = new byte[IN_BUFFER_SIZE];
+			DatagramPacket p = new DatagramPacket(buf, buf.length);
+			while(true) {
+				udpSocket.receive(p);
+				ConnectionInfo info = new ConnectionInfo(p.getAddress(), p.getPort());
+				NetPlayer from = playerTable.get(info);
+				if (from==null)
+					System.out.println("Warning: packet from unknown host: "+p.getAddress().toString());
+				else
+					from.handleUDPPacket(p);
+			}
+		} catch(IOException e) {
+		}
+	}
+
 	void deletePlayer(NetPlayer pl) {
 		physics.deletePlayer(pl);
 		players.remove(pl);
+//		playerTable.remove();
 	}
 
 	private void handleJoin(Socket initial) throws IOException {
@@ -137,6 +167,7 @@ public class NetListener implements Runnable {
 		for(int i=0; i<count-1; ++i) {
 			NetPlayer pl = new NetPlayer(in, this);
 			players.add(pl);
+			playerTable.put(new ConnectionInfo(pl), pl);
 		}
 	}
 	private synchronized void requestJoins() throws IOException {
@@ -161,7 +192,9 @@ public class NetListener implements Runnable {
 		}
 	}
 
-	synchronized void gotJoinOK() {
+	synchronized void gotJoinOK(NetPlayer pl) {
+		physics.addPlayer(pl);
+		playerTable.put(new ConnectionInfo(pl), pl);
 		--waitCount;
 		notify();
 	}
@@ -176,5 +209,28 @@ public class NetListener implements Runnable {
 		out.write(c.getRed());
 		out.write(c.getGreen());
 		out.write(c.getBlue());
+	}
+
+	public void sendSpawn() throws IOException {
+		PacketOutputStream pout = new PacketOutputStream(outPacket.getData());
+		DataOutputStream out = new DataOutputStream(new PacketOutputStream(outPacket.getData()));
+		out.write(TCP_PLAYER_SPAWN);
+
+		Point2D.Float loc = localPlayer.getLoc();
+		out.writeFloat(loc.x);
+		out.writeFloat(loc.y);
+
+		sendTCPPacket(pout.getData(), pout.size());
+	}
+	void sendUDPPacket(DatagramPacket packet) throws IOException {
+		for(NetPlayer pl : players) {
+			packet.setAddress(pl.socket.getInetAddress());
+			packet.setPort(pl.udpPort);
+			udpSocket.send(packet);
+		}
+	}
+	void sendTCPPacket(byte[] buf, int length) throws IOException {
+		for(NetPlayer pl : players)
+			pl.socket.getOutputStream().write(buf, 0, length);
 	}
 }

@@ -54,6 +54,7 @@ public class GameLoop {
 				localPlayer.spawn(physics.getGeometry().getSpawnPoint());
 				spawned = true;
 				System.out.println("local spawn!");
+				net.sendSpawn();
 			}
 
 			physics.update(diff, localPlayer);

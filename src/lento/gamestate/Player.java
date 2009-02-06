@@ -17,10 +17,10 @@ public class Player {
 	protected Color color;
 	protected int id=-1;
 
-	Point2D.Float location=new Point2D.Float(0,0);
-	Point2D.Float speedVec=new Point2D.Float(0,0);
-	Point2D.Float prevLocation=null;
-	float angle;
+	protected Point2D.Float location=new Point2D.Float(0,0);
+	protected Point2D.Float speedVec=new Point2D.Float(0,0);
+	protected Point2D.Float prevLocation=null;
+	protected float angle;
 
 	protected boolean accelerating = false;
 	protected int turning = 0;
@@ -56,6 +56,9 @@ public class Player {
 
 	public Point2D.Float getLoc() {
 		return location;
+	}
+	public Point2D.Float getSpeedVec() {
+		return speedVec;
 	}
 	public Color getColor() {
 		return color;

@@ -4,6 +4,7 @@ import lento.gamestate.*;
 import java.io.*;
 import java.net.*;
 import java.awt.*;
+import java.awt.geom.*;
 import java.util.*;
 
 class NetPlayer extends Player implements Runnable {
@@ -54,8 +55,11 @@ class NetPlayer extends Player implements Runnable {
 			case NetListener.TCP_JOIN_OK:
 				if (waitingJoinOK) {
 					waitingJoinOK = false;
-					listener.gotJoinOK();
+					listener.gotJoinOK(this);
 				}
+				break;
+			case NetListener.TCP_PLAYER_SPAWN:
+				handleSpawn(in);
 				break;
 			default:
 				System.out.println("Warning: unknown TCP packet type "+type);
@@ -216,5 +220,13 @@ class NetPlayer extends Player implements Runnable {
 					break;
 				}
 		} while(!ok);
+	}
+	void handleUDPPacket(DatagramPacket p) {
+		System.out.println("Paketti: "+p.getData()[0]);
+	}
+	private void handleSpawn(DataInputStream in) throws IOException {
+		float x = in.readFloat();
+		float y = in.readFloat();
+		spawn(new Point2D.Float(x,y));
 	}
 };
