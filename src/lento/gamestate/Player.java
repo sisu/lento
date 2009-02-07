@@ -19,13 +19,13 @@ public class Player {
 
 	protected Point2D.Float location=new Point2D.Float(0,0);
 	protected Point2D.Float speedVec=new Point2D.Float(0,0);
-	protected Point2D.Float prevLocation=null;
+	protected Point2D.Float prevLocation=new Point2D.Float(0,0);
 	protected float angle;
 
 	protected boolean accelerating = false;
 	protected int turning = 0;
 
-	boolean alive = false;
+	protected boolean alive = false;
 
 	void update(float time) {
 		// FIXME: tee FPS:stä riippumaton
@@ -88,5 +88,11 @@ public class Player {
 	}
 	public int getID() {
 		return id;
+	}
+	public boolean getAccelerating() {
+		return accelerating;
+	}
+	public int getTurning() {
+		return turning;
 	}
 }

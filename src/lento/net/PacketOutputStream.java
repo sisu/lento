@@ -6,9 +6,8 @@ import java.io.*;
 
 class PacketOutputStream extends ByteArrayOutputStream {
 
-	PacketOutputStream(byte[] buf) {
-		super(0);
-		this.buf = buf;
+	PacketOutputStream(int size) {
+		super(size);
 	}
 	byte[] getData() {
 		return buf;

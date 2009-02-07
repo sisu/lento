@@ -61,6 +61,8 @@ public class GameLoop {
 			if (localPlayer.shooting)
 				physics.createLocalBullets(localPlayer, diff, 0);
 
+			net.sendChanges();
+
 			frame.repaint();
 
 			Thread.sleep(10);

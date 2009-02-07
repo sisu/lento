@@ -35,6 +35,7 @@ public class NetListener implements Runnable {
 	HashMap<ConnectionInfo,NetPlayer> playerTable = new HashMap<ConnectionInfo,NetPlayer>();
 
 	private DatagramPacket outPacket = new DatagramPacket(new byte[OUT_BUFFER_SIZE], OUT_BUFFER_SIZE);
+	private PacketOutputStream outBuffer = new PacketOutputStream(OUT_BUFFER_SIZE);
 
 	private int waitCount=0;
 
@@ -48,7 +49,7 @@ public class NetListener implements Runnable {
 		this.localPlayer = localPlayer;
 		tcpSocket = openServerSocket();
 		Socket socket = new Socket(addr,port);
-		handleJoin(socket);
+		handleOwnJoin(socket);
 	}
 	private ServerSocket openServerSocket() throws IOException {
 		ServerSocket s;
@@ -92,7 +93,7 @@ public class NetListener implements Runnable {
 				ConnectionInfo info = new ConnectionInfo(p.getAddress(), p.getPort());
 				NetPlayer from = playerTable.get(info);
 				if (from==null)
-					System.out.println("Warning: packet from unknown host: "+p.getAddress().toString());
+					System.out.println("Warning: packet from unknown host: "+p.getAddress().toString()+" : "+p.getPort());
 				else
 					from.handleUDPPacket(p);
 			}
@@ -106,7 +107,7 @@ public class NetListener implements Runnable {
 //		playerTable.remove();
 	}
 
-	private void handleJoin(Socket initial) throws IOException {
+	private void handleOwnJoin(Socket initial) throws IOException {
 		DataOutputStream out = new DataOutputStream(initial.getOutputStream());
 		DataInputStream in = new DataInputStream(initial.getInputStream());
 		getAreaInfo(in,out);
@@ -212,15 +213,15 @@ public class NetListener implements Runnable {
 	}
 
 	public void sendSpawn() throws IOException {
-		PacketOutputStream pout = new PacketOutputStream(outPacket.getData());
-		DataOutputStream out = new DataOutputStream(new PacketOutputStream(outPacket.getData()));
+		outBuffer.reset();
+		DataOutputStream out = new DataOutputStream(outBuffer);
 		out.write(TCP_PLAYER_SPAWN);
 
 		Point2D.Float loc = localPlayer.getLoc();
 		out.writeFloat(loc.x);
 		out.writeFloat(loc.y);
 
-		sendTCPPacket(pout.getData(), pout.size());
+		sendTCPPacket(outBuffer.getData(), outBuffer.size());
 	}
 	void sendUDPPacket(DatagramPacket packet) throws IOException {
 		for(NetPlayer pl : players) {
@@ -229,8 +230,56 @@ public class NetListener implements Runnable {
 			udpSocket.send(packet);
 		}
 	}
+	void sendUDPPacket(byte[] buf, int length) throws IOException {
+		DatagramPacket packet = new DatagramPacket(buf, length);
+		for(NetPlayer pl : players) {
+			if (pl.getID()<0) continue;
+//			System.out.printf("Sending UDP packet %d: %d bytes to %s : %d\n", buf[0], length, pl.socket.getInetAddress().toString(), pl.udpPort);
+			packet.setAddress(pl.socket.getInetAddress());
+			packet.setPort(pl.udpPort);
+			udpSocket.send(packet);
+		}
+	}
 	void sendTCPPacket(byte[] buf, int length) throws IOException {
-		for(NetPlayer pl : players)
-			pl.socket.getOutputStream().write(buf, 0, length);
+		for(NetPlayer pl : players) {
+			if (pl.getID()<0) continue;
+			System.out.printf("sending %d(%d) to %s : %d\n", buf[0], length, pl.socket.getInetAddress().toString(), pl.socket.getPort());
+			OutputStream out = pl.socket.getOutputStream();
+			out.write(buf, 0, length);
+			out.flush();
+		}
+	}
+
+	public void sendChanges() throws IOException {
+		if (localPlayer.isAlive()) {
+			// lähetä uusi sijainti
+			outBuffer.reset();
+			DataOutputStream out = new DataOutputStream(outBuffer);
+			out.write(UDP_PLAYER_STATE);
+
+			Point2D.Float loc = localPlayer.getLoc();
+			out.writeFloat(loc.x);
+			out.writeFloat(loc.y);
+
+			Point2D.Float speed = localPlayer.getSpeedVec();
+			out.writeFloat(speed.x);
+			out.writeFloat(speed.y);
+
+			out.writeFloat(localPlayer.getAngle());
+
+			boolean accel = localPlayer.getAccelerating();
+			int turn = localPlayer.getTurning();
+			byte mask=0;
+			if (accel) mask |= 0x1;
+			if (turn>0) mask |= 0x2;
+			if (turn<0) mask |= 0x4;
+			out.write(mask);
+
+			sendUDPPacket(outBuffer.getData(), outBuffer.size());
+		}
+	}
+	void playerJoined(NetPlayer pl) {
+		physics.addPlayer(pl);
+		playerTable.put(new ConnectionInfo(pl), pl);
 	}
 }

@@ -13,6 +13,7 @@ class NetPlayer extends Player implements Runnable {
 	NetListener listener;
 	volatile boolean done=false;
 	int udpPort=0;
+	int tcpPort=0;
 	boolean waitingJoinOK = false;
 
 	NetPlayer(Socket socket, NetListener listener) {
@@ -21,11 +22,12 @@ class NetPlayer extends Player implements Runnable {
 	}
 
 	public void run() {
-		System.out.println("NetPlayer thread started");
+		System.out.printf("NetPlayer thread started: %s : %d\n", socket.getInetAddress().toString(), socket.getPort());
 		DataInputStream in=null;
 		try {
 			in = new DataInputStream(socket.getInputStream());
 			while(socket.isConnected() && !done) {
+				System.out.println("Waiting for next packet...");
 				int packetType = in.read();
 				if (packetType == -1) break;
 				System.out.println("got byte: "+packetType);
@@ -101,21 +103,25 @@ class NetPlayer extends Player implements Runnable {
 		System.out.println("jee: "+listener.tcpSocket.getInetAddress().toString());
 		out.write(listener.tcpSocket.getInetAddress().getAddress(), 0, 4);
 		out.writeShort(listener.tcpSocket.getLocalPort());
-		out.writeShort(listener.udpSocket.getPort());
+		out.writeShort(listener.udpSocket.getLocalPort());
 		out.write(listener.localPlayer.getID());
 
 		sendSinglePlayerData(out, listener.localPlayer);
 
-		for(NetPlayer p : players)
+		for(NetPlayer p : players) {
+			System.out.println("Attemping to send pl info: "+p.id);
 			if (p.id >= 0)
 				sendSinglePlayer(out,p);
+		}
 
 		out.flush();
 	}
 	private void handleJoinRequest(DataInputStream in) throws IOException {
 		System.out.println("got join request");
 
+		tcpPort = in.readUnsignedShort();
 		udpPort = in.readUnsignedShort();
+		System.out.printf("Got TCP and UDP ports: %d %d\n", tcpPort, udpPort);
 		id = in.read();
 
 		int nameLen = in.read();
@@ -125,19 +131,20 @@ class NetPlayer extends Player implements Runnable {
 		color = NetListener.readColor(in);
 
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+		// FIXME: tarkista onko ID vapaa
 		if (listener.physics.getPlayers().size() >= 127) {
 			out.write(NetListener.TCP_JOIN_FAIL);
 			id = -1;
-		}
-		else {
+		} else {
 			out.write(NetListener.TCP_JOIN_OK);
-			listener.physics.addPlayer(this);
-			System.out.println("OK sent");
+			listener.playerJoined(this);
+			System.out.println("OK sent "+id);
 		}
 	}
 	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
 		out.write(p.socket.getInetAddress().getAddress(), 0, 4);
-		out.writeShort(p.socket.getPort());
+		System.out.printf("sending ports: %d %d\n", p.tcpPort, p.udpPort);
+		out.writeShort(p.tcpPort);
 		out.writeShort(p.udpPort);
 		out.write(p.id);
 		sendSinglePlayerData(out,p);
@@ -153,6 +160,8 @@ class NetPlayer extends Player implements Runnable {
 		assert stats.length==4;
 		for(int s : stats)
 			out.writeInt(s);
+
+		out.write(p.isAlive() ? 1 : 0);
 	}
 
 	NetPlayer(DataInputStream in, NetListener listener) throws IOException {
@@ -166,11 +175,11 @@ class NetPlayer extends Player implements Runnable {
 		readClientData(in);
 	}
 
-	void readClientData(DataInputStream in) throws IOException {
+	private void readClientData(DataInputStream in) throws IOException {
 		byte[] buf = new byte[4];
 		in.readFully(buf);
 		InetAddress addr = InetAddress.getByAddress(buf);
-		int tcpPort = in.readUnsignedShort();
+		tcpPort = in.readUnsignedShort();
 
 		System.out.println("got address and port: "+addr.toString()+" "+tcpPort);
 
@@ -193,13 +202,18 @@ class NetPlayer extends Player implements Runnable {
 		deaths = in.readInt();
 		damageDone = in.readInt();
 		damageTaken = in.readInt();
+
+		alive = in.read()==1 ? true : false;
 	}
 	void requestJoin() throws IOException {
 		waitingJoinOK = true;
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_JOIN_GAME);
 
-		out.writeShort(listener.udpSocket.getPort());
+		System.out.println("Sending TCP port: "+listener.tcpSocket.getLocalPort());
+		out.writeShort(listener.tcpSocket.getLocalPort());
+		System.out.println("Sending UDP port: "+listener.udpSocket.getLocalPort());
+		out.writeShort(listener.udpSocket.getLocalPort());
 		genID();
 		out.write(id);
 
@@ -221,8 +235,39 @@ class NetPlayer extends Player implements Runnable {
 				}
 		} while(!ok);
 	}
-	void handleUDPPacket(DatagramPacket p) {
-		System.out.println("Paketti: "+p.getData()[0]);
+	void handleUDPPacket(DatagramPacket p) throws IOException {
+		ByteArrayInputStream in = new ByteArrayInputStream(p.getData());
+		int type = in.read();
+//		System.out.println("Paketti: "+type);
+		try {
+		switch(type) {
+			case NetListener.UDP_PLAYER_STATE:
+				updatePlayerState(in);
+				break;
+			case NetListener.UDP_PLAYER_SHOOT:
+				break;
+			case NetListener.UDP_PLAYER_HIT:
+				break;
+			default:
+				System.out.println("Warning: unknown UDP packet type: "+type);
+		}
+		} catch(IOException e) {
+			System.out.printf("Bad data from client %s : %d\n", socket.getInetAddress().toString(), udpPort);
+		}
+	}
+	private void updatePlayerState(InputStream istream) throws IOException {
+		DataInputStream in = new DataInputStream(istream);
+		location.x = prevLocation.x = in.readFloat();
+		location.y = prevLocation.y = in.readFloat();
+		speedVec.x = in.readFloat();
+		speedVec.y = in.readFloat();
+		angle = in.readFloat();
+		
+		int mask = in.read();
+		if ((mask&0x1)!=0) accelerating = true;
+		if ((mask&0x2)!=0) turning = 1;
+		else if ((mask&0x4)!=0) turning = -1;
+		else turning = 0;
 	}
 	private void handleSpawn(DataInputStream in) throws IOException {
 		float x = in.readFloat();

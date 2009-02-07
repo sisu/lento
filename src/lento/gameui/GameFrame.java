@@ -51,9 +51,7 @@ class GameFrame extends JFrame {
 		g2.translate(w2-loc.x, h2-loc.y);
 
 		AreaGeometry geometry = physics.getGeometry();
-		ArrayList<ColoredPolygon> polygons = geometry.getPolygons();
-		for(Iterator<ColoredPolygon> i=polygons.iterator(); i.hasNext(); ) {
-			ColoredPolygon cp = i.next();
+		for(ColoredPolygon cp : geometry.getPolygons()) {
 			g2.setColor(cp.color);
 			g2.fill(cp);
 		}
@@ -64,13 +62,12 @@ class GameFrame extends JFrame {
 		g2.fillRect(-BORDER_SIZE, areaH, areaW+2*BORDER_SIZE, BORDER_SIZE);
 		g2.fillRect(areaW, 0, BORDER_SIZE, areaH);
 
-		ArrayList<Player> players = physics.getPlayers();
 		AffineTransform identity = new AffineTransform();
-		for(Iterator<Player> i=players.iterator(); i.hasNext(); ) {
-			Player pl = i.next();
+		for(Player pl : physics.getPlayers()) {
+			if (!pl.isAlive()) continue;
 			Point2D.Float ploc = pl.getLoc();
 			g2.setTransform(identity);
-			g2.translate(loc.x-ploc.x+w2, loc.y-ploc.y+h2);
+			g2.translate(ploc.x-loc.x+w2, ploc.y-loc.y+h2);
 			g2.rotate(-Math.PI/2-pl.getAngle());
 			g2.setColor(pl.getColor());
 			g2.fill(craftPolygon);
