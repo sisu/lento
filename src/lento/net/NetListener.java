@@ -39,7 +39,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 	ArrayList<Bullet> localHits = new ArrayList<Bullet>();
 	ArrayList<Bullet> remoteHits = new ArrayList<Bullet>();
 
-	private DatagramPacket outPacket = new DatagramPacket(new byte[OUT_BUFFER_SIZE], OUT_BUFFER_SIZE);
 	private PacketOutputStream outBuffer = new PacketOutputStream(OUT_BUFFER_SIZE);
 
 	private int waitCount=0;
@@ -350,6 +349,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			out.write(TCP_PLAYER_DIE);
 			out.write(killer);
 			out.writeShort(damage);
+			System.out.printf("sent damage: %d\n", damage);
 			sendTCPPacket(outBuffer.getData(), outBuffer.size());
 		} catch(IOException e) {
 			e.printStackTrace();
@@ -363,8 +363,11 @@ public class NetListener implements Runnable, PhysicsObserver {
 		}
 	}
 	void addRemoteHit(int shooter, int id) {
-		Player pl = physics.getPlayer(shooter);
-		pl.addHitDone();
+		if (id > 0) {
+			Player pl = physics.getPlayer(shooter);
+			if (pl!=null)
+				pl.addHitDone();
+		}
 		synchronized(remoteHits) {
 			Bullet b = physics.getBullet(shooter,id);
 			if (b!=null)

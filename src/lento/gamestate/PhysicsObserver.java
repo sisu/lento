@@ -5,8 +5,7 @@ package lento.gamestate;
  */
 public interface PhysicsObserver {
 	/** Kutsutaan, kun pelaajaan osuu ammus.
-	 * @param player ammuksen ampujan pelaaja-ID
-	 * @param id ammuksen ID
+	 * @param bullet pelaajaan osunut ammus
 	 */
 	public void hit(Bullet bullet);
 	/** Kutsutaan, kun paikallinen pelaaja ampuu.

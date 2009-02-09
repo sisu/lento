@@ -13,16 +13,16 @@ class GameFrame extends JFrame {
 	private static final Polygon craftPolygon = new Polygon(new int[]{-10,0,10,0}, new int[]{-10,5,-10,10}, 4);
 	private static final int BORDER_SIZE = 25;
 	private static final int BAR_W_GAP = 20;
-	private static final int BAR_HEIGHT = 15;
-	private static final int BAR_H_GAP = 5;
+	private static final int BAR_HEIGHT = 10;
+	private static final int BAR_H_GAP = 3;
 
 	private GamePhysics physics;
-	private Player localPlayer;
+	private LocalPlayer localPlayer;
 
 	boolean scoreViewMode = false;
 	int frameCount=0;
 
-	GameFrame(GamePhysics physics, Player localPlayer) {
+	GameFrame(GamePhysics physics, LocalPlayer localPlayer) {
 		super("Lento");
 		this.physics = physics;
 		this.localPlayer = localPlayer;
@@ -65,17 +65,28 @@ class GameFrame extends JFrame {
 		float w2=w/2.f, h2=h/2.f;
 
 		float midX = w2-loc.x, midY = h2-loc.y;
+
+		AreaGeometry geometry = physics.getGeometry();
+		int areaW = geometry.getWidth(), areaH = geometry.getHeight();
+
+		if (w >= areaW)
+			midX = w2-areaW/2;
+		else
+			midX = Math.max(Math.min(midX, BORDER_SIZE), w-areaW-BORDER_SIZE);
+		if (h >= areaH)
+			midY = h2-areaH/2;
+		else 
+			midY = Math.max(Math.min(midY, 2*BORDER_SIZE), h-areaH-BORDER_SIZE);
+
 		g2.translate(midX, midY);
 
 		// Piirrä kentän esteet
-		AreaGeometry geometry = physics.getGeometry();
 		for(ColoredPolygon cp : geometry.getPolygons()) {
 			g2.setColor(cp.color);
 			g2.fill(cp);
 		}
 
 		// Piirrä kentän reunat
-		int areaW = geometry.getWidth(), areaH = geometry.getHeight();
 		g2.setColor(geometry.getBorderColor());
 		g2.fillRect(-BORDER_SIZE,-BORDER_SIZE, areaW+2*BORDER_SIZE, BORDER_SIZE);
 		g2.fillRect(-BORDER_SIZE, 0, BORDER_SIZE, areaH);
@@ -110,6 +121,10 @@ class GameFrame extends JFrame {
 		int maxBarSize = w-2*BAR_W_GAP;;
 		int lifeBarSize = (int)(maxBarSize * (float)localPlayer.getHealth()/Player.INITIAL_HEALTH);
 		g2.fill(new Rectangle(BAR_W_GAP, h-BAR_HEIGHT-BAR_H_GAP, lifeBarSize, BAR_HEIGHT));
+
+		g2.setColor(Color.yellow);
+		int energyBarSize = (int)(maxBarSize * localPlayer.shootEnergy/LocalPlayer.MAX_SHOOT_ENERGY);
+		g2.fill(new Rectangle(BAR_W_GAP, h-2*(BAR_HEIGHT+BAR_H_GAP), energyBarSize, BAR_HEIGHT));
 
 		++frameCount;
 	}

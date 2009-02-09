@@ -14,7 +14,7 @@ public class GamePhysics {
 	static final float BULLET_HIT_RANGE = 8.f;
 	static final float BULLET_HIT_RANGE_SQ = BULLET_HIT_RANGE*BULLET_HIT_RANGE;
 	static final float BULLET_SPEED = 400.f;
-	public static final long SHOOT_INTERVAL = (long)2e8;
+	public static final long SHOOT_INTERVAL = (long)1e8;
 	public static final int BULLET_DAMAGE = 100;
 	public static final float COLLISION_DAMAGE_FACTOR = 0.1f;
 
@@ -39,6 +39,7 @@ public class GamePhysics {
 	 */
 	public void update(float time, Player localPlayer) {
 		int localHealth = localPlayer.health;
+		boolean alive = localPlayer.alive;
 		for(Player pl : players) {
 			if (pl.isAlive()) {
 				pl.update(time);
@@ -50,7 +51,7 @@ public class GamePhysics {
 			}
 		}
 		localPlayer.damageTaken += localHealth-localPlayer.health;
-		if (localPlayer.health<=0) {
+		if (alive && localPlayer.health<=0) {
 			localPlayer.alive = false;
 			observer.die(localPlayer.id, Player.INITIAL_HEALTH-localPlayer.health);
 		}
@@ -71,6 +72,9 @@ public class GamePhysics {
 				deleteBullet(i);
 				if (observer!=null)
 					observer.hit(b);
+				Player shooter = getPlayer(b.getShooter());
+				if (shooter!=null && shooter.id!=localPlayer.id)
+					shooter.damageDone += BULLET_DAMAGE;
 				--i;
 				localPlayer.health -= BULLET_DAMAGE;
 				localPlayer.damageTaken += BULLET_DAMAGE;
@@ -126,7 +130,8 @@ public class GamePhysics {
 		bullets.remove(size-1);
 
 		Player pl = getPlayer(last.getShooter());
-		pl.bulletIndex[last.getID()] = i;
+		if (pl!=null)
+			pl.bulletIndex[last.getID()] = i;
 	}
 	public void deleteBullet(Bullet b) {
 		Player pl = players.get(playerIndex[b.getShooter()]);
@@ -158,12 +163,13 @@ public class GamePhysics {
 	 * @param curTime aika tämän framen alussa nanosekunteina
 	 * @param nextShootTime aika, jolloin kyseinen pelaaja saa seuraavan kerran ampua
 	 * @param nextID seuraavan ammuttavan ammuksen ID
+	 * @param maxCount maksimimäärä, paljonko ammuksia voidaan tuottaa tällä kutsukerralla
 	 * @return ammuttujen ammusten määrä
 	 */
-	public int createLocalBullets(Player player, long prevTime, long curTime, long nextShootTime, int nextID) {
+	public int createLocalBullets(Player player, long prevTime, long curTime, long nextShootTime, int nextID, int maxCount) {
 		long tDiff = curTime-prevTime;
 		int count=0;
-		while(nextShootTime < curTime) {
+		while(count < maxCount && nextShootTime < curTime) {
 
 			float td = (float)(nextShootTime-prevTime)/tDiff;
 			float locX = td*player.location.x + (1-td)*player.prevLocation.x;
@@ -174,6 +180,8 @@ public class GamePhysics {
 			locY -= sa*(BULLET_HIT_RANGE+5);
 			float vx = ca*BULLET_SPEED + player.speedVec.x;
 			float vy = -sa*BULLET_SPEED + player.speedVec.y;
+
+			assert(td>=0 && td<=1);
 
 //			System.out.printf("muu %f %f ; %f %f (%f %f) (%f ; %f)\n", locX,locY,vx,vy, player.location.x, player.location.y, td, (1-td)*tDiff/1e9f);
 			Bullet b = new Bullet(locX,locY,vx,vy,player.id,nextID+count);
@@ -248,6 +256,12 @@ public class GamePhysics {
 		return bullets.get(idx);
 	}
 	public Player getPlayer(int id) {
-		return players.get(playerIndex[id]);
+		int num = playerIndex[id];
+		if (num >= players.size())
+			return null;
+		Player pl = players.get(playerIndex[id]);
+		if (pl.id != id)
+			return null;
+		return pl;
 	}
 };

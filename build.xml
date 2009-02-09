@@ -18,4 +18,8 @@
 			</manifest>
 		</jar>
 	</target>
+	<target name="doc" description="create documentation">
+		<javadoc access="private" author="true" version="true" destdir="doc" sourcepath="src">
+		</javadoc>
+	</target>
 </project>

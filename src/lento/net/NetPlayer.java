@@ -31,7 +31,7 @@ class NetPlayer extends Player implements Runnable {
 				int packetType = in.read();
 				if (packetType == -1) break;
 				System.out.println("got byte: "+packetType);
-				handleTcpPacket(packetType, in);
+				handleTCPPacket(packetType, in);
 			}
 		} catch(Exception e) {
 		} finally {
@@ -43,7 +43,7 @@ class NetPlayer extends Player implements Runnable {
 			} catch(IOException evvk) {}
 		}
 	}
-	private void handleTcpPacket(int type, DataInputStream in) throws IOException {
+	private void handleTCPPacket(int type, DataInputStream in) throws IOException {
 		switch(type) {
 			case NetListener.TCP_GET_AREA_INFO:
 				sendAreaInfo();
@@ -173,6 +173,7 @@ class NetPlayer extends Player implements Runnable {
 			pl.addKills();
 
 		int damage = in.readUnsignedShort();
+		System.out.printf("got damage: %d\n", damage);
 		damageTaken += damage;
 		deaths++;
 		alive = false;
@@ -181,15 +182,15 @@ class NetPlayer extends Player implements Runnable {
 	NetPlayer(DataInputStream in, NetListener listener) throws IOException {
 		this.listener = listener;
 		this.socket = null;
-		readClientData(in);
+		readInitialData(in);
 	}
 	NetPlayer(DataInputStream in, NetListener listener, Socket socket) throws IOException {
 		this.listener = listener;
 		this.socket = socket;
-		readClientData(in);
+		readInitialData(in);
 	}
 
-	private void readClientData(DataInputStream in) throws IOException {
+	private void readInitialData(DataInputStream in) throws IOException {
 		byte[] buf = new byte[4];
 		in.readFully(buf);
 		InetAddress addr = InetAddress.getByAddress(buf);
@@ -249,7 +250,7 @@ class NetPlayer extends Player implements Runnable {
 		} while(!ok);
 	}
 	void handleUDPPacket(DatagramPacket p) throws IOException {
-		ByteArrayInputStream in = new ByteArrayInputStream(p.getData());
+		ByteArrayInputStream in = new ByteArrayInputStream(p.getData(), 0, p.getLength());
 		int type = in.read();
 //		System.out.println("Paketti: "+type);
 		try {
@@ -310,9 +311,12 @@ class NetPlayer extends Player implements Runnable {
 		DataInputStream in = new DataInputStream(istream);
 
 		int count = istream.available()/3;
+		System.out.println("hits count: "+count);
 		for(int i=0; i<count; ++i) {
 			int shooter = in.readUnsignedByte();
 			int bulletID = in.readUnsignedShort();
+			if (shooter==id)
+				shooter = -1;
 			listener.addRemoteHit(shooter,bulletID);
 		}
 	}

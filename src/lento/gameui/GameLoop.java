@@ -63,12 +63,19 @@ public class GameLoop {
 			if (alive && !localPlayer.isAlive()) {
 				localPlayer.spawnTime = time + LocalPlayer.SPAWN_TIME;
 			}
+
+			// ampumisesta huolehtiminen
 			if (localPlayer.isAlive() && localPlayer.shooting) {
-				int count = physics.createLocalBullets(localPlayer, prevTime, time, localPlayer.nextShootTime, localPlayer.nextBulletID);
+				localPlayer.nextShootTime = Math.max(localPlayer.nextShootTime, prevTime);
+
+				int maxShoots = (int)(localPlayer.shootEnergy / LocalPlayer.SHOOT_ENERGY_USE);
+				int count = physics.createLocalBullets(localPlayer, prevTime, time, localPlayer.nextShootTime, localPlayer.nextBulletID, maxShoots);
 				if (count!=0) System.out.println("cnt "+count);
 				localPlayer.nextBulletID += count;
 				localPlayer.nextShootTime += count*GamePhysics.SHOOT_INTERVAL;
+				localPlayer.shootEnergy -= count*LocalPlayer.SHOOT_ENERGY_USE;
 			}
+			localPlayer.recoverShootEnergy(diff);
 
 			net.updateChanges();
 

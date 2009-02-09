@@ -15,12 +15,23 @@ public class AreaGeometry {
 	private int sizeW=0,sizeH=0;
 	Color borderColor=null;
 
+	/** Luo pelialueen lukemalla sen tiedot tiedostosta.
+	 * @param file tiedosto, josta tiedot luetaan.
+	 */
 	AreaGeometry(File file) throws IOException {
 		readFile(file);
 	}
+	/** Luo tyhjän 0x0-kokoisen pelialueen.
+	 */
 	AreaGeometry() {
 	}
 
+	/** Määrittää, törmääkö jana johonkin pelialueen esteeseen tai reunaan.
+	 * @param a janan lähtöpiste
+	 * @param b janan loppupiste
+	 * @return pisteen, jossa a:sta b:hen kulkeva jana ensimmäisenä törmää johonkin ja sitä vastaavan normaalivektorin
+	 * @return null, jos jana (a,b) ei leikkaa mitään kentän esteistä eikä kentän reunaa
+	 */
 	Collision getCollision(Point2D.Float a, Point2D.Float b) {
 //		System.out.printf("testing: %f %f - %f %f\n", a.x,a.y,b.x,b.y);
 		Collision res=null;
@@ -138,7 +149,7 @@ public class AreaGeometry {
 	}
 	private void addEdges(Polygon p) {
 		// Testaa, ovatko kärkipisteet listattu myötä- vai vastapäivään
-		int area=0;
+		long area=0;
 		int x0=p.xpoints[0], y0=p.ypoints[0];
 		for(int i=2; i<p.npoints; ++i)
 			area += crossp(x0,y0,p.xpoints[i-1],p.ypoints[i-1],p.xpoints[i],p.ypoints[i]);
@@ -154,7 +165,7 @@ public class AreaGeometry {
 		System.out.printf("adding edge: %d %d - %d %d ; %d %d\n", x1,y1,x2,y2,nx,ny);
 		edges.add(new Edge(x1,y1,x2,y2,nx,ny));
 	}
-	private static int crossp(int x0, int y0, int x1, int y1, int x2, int y2) {
+	private static long crossp(long x0, long y0, long x1, long y1, long x2, long y2) {
 		x1-=x0; y1-=y0;
 		x2-=x0; y2-=y0;
 		return x1*y2-x2*y1;
