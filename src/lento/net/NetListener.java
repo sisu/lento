@@ -7,7 +7,7 @@ import java.util.*;
 import java.awt.*;
 import java.awt.geom.*;
 
-public class NetListener implements Runnable {
+public class NetListener implements Runnable, PhysicsObserver {
 
 	static public final int DEFAULT_TCP_PORT = 53256;
 
@@ -34,6 +34,11 @@ public class NetListener implements Runnable {
 	Player localPlayer;
 	HashMap<ConnectionInfo,NetPlayer> playerTable = new HashMap<ConnectionInfo,NetPlayer>();
 
+	ArrayList<Bullet> localShoots = new ArrayList<Bullet>();
+	ArrayList<Bullet> remoteShoots = new ArrayList<Bullet>();
+	ArrayList<Bullet> localHits = new ArrayList<Bullet>();
+	ArrayList<Bullet> remoteHits = new ArrayList<Bullet>();
+
 	private DatagramPacket outPacket = new DatagramPacket(new byte[OUT_BUFFER_SIZE], OUT_BUFFER_SIZE);
 	private PacketOutputStream outBuffer = new PacketOutputStream(OUT_BUFFER_SIZE);
 
@@ -49,7 +54,7 @@ public class NetListener implements Runnable {
 		this.localPlayer = localPlayer;
 		tcpSocket = openServerSocket();
 		Socket socket = new Socket(addr,port);
-		handleOwnJoin(socket);
+		localPlayer.setID(handleOwnJoin(socket));
 	}
 	private ServerSocket openServerSocket() throws IOException {
 		ServerSocket s;
@@ -107,14 +112,16 @@ public class NetListener implements Runnable {
 //		playerTable.remove();
 	}
 
-	private void handleOwnJoin(Socket initial) throws IOException {
+	private int handleOwnJoin(Socket initial) throws IOException {
 		DataOutputStream out = new DataOutputStream(initial.getOutputStream());
 		DataInputStream in = new DataInputStream(initial.getInputStream());
 		getAreaInfo(in,out);
 		getPlayerInfo(in,out,initial);
 		for(NetPlayer p : players)
 			new Thread(p).start();
-		requestJoins();
+		int id = genID();
+		requestJoins(id);
+		return id;
 	}
 	private void getAreaInfo(DataInputStream in,DataOutputStream out) throws IOException {
 		out.write(TCP_GET_AREA_INFO);
@@ -171,11 +178,11 @@ public class NetListener implements Runnable {
 			playerTable.put(new ConnectionInfo(pl), pl);
 		}
 	}
-	private synchronized void requestJoins() throws IOException {
+	private synchronized void requestJoins(int id) throws IOException {
 		waitCount = players.size();
 		System.out.println("players to wait for: "+waitCount);
 		for(NetPlayer p : players)
-			p.requestJoin();
+			p.requestJoin(id);
 		while(waitCount>0) {
 			System.out.println("waiting: "+waitCount);
 			try {
@@ -250,7 +257,7 @@ public class NetListener implements Runnable {
 		}
 	}
 
-	public void sendChanges() throws IOException {
+	public void updateChanges() throws IOException {
 		if (localPlayer.isAlive()) {
 			// lähetä uusi sijainti
 			outBuffer.reset();
@@ -277,9 +284,106 @@ public class NetListener implements Runnable {
 
 			sendUDPPacket(outBuffer.getData(), outBuffer.size());
 		}
+		if (!localShoots.isEmpty()) {
+			System.out.printf("Sending %d bullets\n", localShoots.size());
+			outBuffer.reset();
+			DataOutputStream out = new DataOutputStream(outBuffer);
+			out.write(UDP_PLAYER_SHOOT);
+			out.writeShort(localShoots.get(0).getID());
+
+			for(Bullet b : localShoots) {
+				Point2D.Float loc = b.getLoc();
+				Point2D.Float speed = b.getSpeedVec();
+
+				out.writeFloat(loc.x);
+				out.writeFloat(loc.y);
+				out.writeFloat(speed.x);
+				out.writeFloat(speed.y);
+			}
+			sendUDPPacket(outBuffer.getData(), outBuffer.size());
+
+			localShoots.clear();
+		}
+		if (!localHits.isEmpty()) {
+			outBuffer.reset();
+			DataOutputStream out = new DataOutputStream(outBuffer);
+			out.write(UDP_PLAYER_HIT);
+
+			for(Bullet b : localHits) {
+				out.write(b.getShooter());
+				out.writeShort(b.getID());
+			}
+
+			sendUDPPacket(outBuffer.getData(), outBuffer.size());
+
+			localHits.clear();
+		}
+		synchronized(remoteShoots) {
+			for(Bullet b : remoteShoots) {
+				physics.addBullet(b);
+			}
+			remoteShoots.clear();
+		}
+		synchronized(remoteHits) {
+			for(Bullet b : remoteHits) {
+				physics.deleteBullet(b);
+			}
+			remoteHits.clear();
+		}
 	}
 	void playerJoined(NetPlayer pl) {
 		physics.addPlayer(pl);
 		playerTable.put(new ConnectionInfo(pl), pl);
 	}
+
+	// PhysicsObserver-kamat
+	public void shoot(Bullet b) {
+		localShoots.add(b);
+	}
+	public void hit(Bullet b) {
+		localHits.add(b);
+	}
+	public void die(int killer, int damage) {
+		try {
+			outBuffer.reset();
+			DataOutputStream out = new DataOutputStream(outBuffer);
+			out.write(TCP_PLAYER_DIE);
+			out.write(killer);
+			out.writeShort(damage);
+			sendTCPPacket(outBuffer.getData(), outBuffer.size());
+		} catch(IOException e) {
+			e.printStackTrace();
+		}
+	}
+	// PhysicsObserver end
+
+	void addRemoteBullet(Bullet b) {
+		synchronized(remoteShoots) {
+			remoteShoots.add(b);
+		}
+	}
+	void addRemoteHit(int shooter, int id) {
+		Player pl = physics.getPlayer(shooter);
+		pl.addHitDone();
+		synchronized(remoteHits) {
+			Bullet b = physics.getBullet(shooter,id);
+			if (b!=null)
+				remoteHits.add(b);
+		}
+	}
+	private int genID() {
+		int id=0;
+		boolean ok;
+		do {
+			ok = true;
+			id = (int)(Math.random()*128);
+			for(Player pl : physics.getPlayers())
+				if (pl.getID()==id) {
+					ok=false;
+					break;
+				}
+		} while(!ok);
+		return id;
+	}
+
 }

@@ -11,24 +11,27 @@ public class GameLoop {
 	private GamePhysics physics;
 	private LocalPlayer localPlayer;
 	private NetListener net;
+	GameFrame frame;
 	boolean done=false;
 
 	public GameLoop(File file, String name, Color color) throws IOException {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics(file);
-		physics.addPlayer(localPlayer);
 		net = new NetListener(physics, localPlayer);
+		physics.addPlayer(localPlayer);
+		physics.setObserver(net);
 	}
 	public GameLoop(InetAddress addr, int port, String name, Color color) throws IOException {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics();
-		physics.addPlayer(localPlayer);
 		net = new NetListener(physics, localPlayer, addr, port);
+		physics.addPlayer(localPlayer);
+		physics.setObserver(net);
 	}
 
 	public void start() throws IOException {
 		System.out.println("creating game frame");
-		GameFrame frame = new GameFrame(physics, localPlayer);
+		frame = new GameFrame(physics, localPlayer);
 		frame.addKeyListener(localPlayer);
 
 		new Thread(net).start();
@@ -47,8 +50,6 @@ public class GameLoop {
 				frame.frameCount=0;
 			}
 
-			prevTime = time;
-
 			boolean spawned = false;
 			if (!localPlayer.isAlive() && time>=localPlayer.spawnTime) {
 				localPlayer.spawn(physics.getGeometry().getSpawnPoint());
@@ -57,14 +58,23 @@ public class GameLoop {
 				net.sendSpawn();
 			}
 
+			boolean alive = localPlayer.isAlive();
 			physics.update(diff, localPlayer);
-			if (localPlayer.shooting)
-				physics.createLocalBullets(localPlayer, diff, 0);
+			if (alive && !localPlayer.isAlive()) {
+				localPlayer.spawnTime = time + LocalPlayer.SPAWN_TIME;
+			}
+			if (localPlayer.isAlive() && localPlayer.shooting) {
+				int count = physics.createLocalBullets(localPlayer, prevTime, time, localPlayer.nextShootTime, localPlayer.nextBulletID);
+				if (count!=0) System.out.println("cnt "+count);
+				localPlayer.nextBulletID += count;
+				localPlayer.nextShootTime += count*GamePhysics.SHOOT_INTERVAL;
+			}
 
-			net.sendChanges();
+			net.updateChanges();
 
 			frame.repaint();
 
+			prevTime = time;
 			Thread.sleep(10);
 //			if (false) throw new InterruptedException();
 		}

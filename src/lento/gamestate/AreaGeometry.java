@@ -31,7 +31,7 @@ public class AreaGeometry {
 			if (crosspf(a.x,a.y,b.x,b.y,c.x,c.y)*crosspf(a.x,a.y,b.x,b.y,d.x,d.y) <= 0
 				&& crosspf(c.x,c.y,d.x,d.y,a.x,a.y)*crosspf(c.x,c.y,d.x,d.y,b.x,b.y) <= 0)
 			{
-				System.out.println("hit");
+	//			System.out.println("hit");
 				float dax=b.x-a.x;
 				float day=b.y-a.y;
 				float dbx=d.x-c.x;
@@ -101,10 +101,14 @@ public class AreaGeometry {
 				}
 			}
 			// Lisää kentän reunat särmiin
-			addEdge(0,0,sizeW,0,1);
+/*			addEdge(0,0,sizeW,0,1);
 			addEdge(sizeW,0,sizeW,sizeH,1);
 			addEdge(sizeW,sizeH,0,sizeH,1);
 			addEdge(0,sizeH,0,0,1);
+*/			addEdge(-1,0,sizeW+1,0,1);
+			addEdge(sizeW,-1,sizeW,sizeH+1,1);
+			addEdge(sizeW+1,sizeH,-1,sizeH,1);
+			addEdge(0,sizeH+1,0,-1,1);
 		} catch(NumberFormatException e) {
 			readError(file,lineCount,"Virheellinen numeroformaatti.");
 		}

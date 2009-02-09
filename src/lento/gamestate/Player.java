@@ -8,9 +8,10 @@ import java.awt.geom.*;
  */
 public class Player {
 
-	private final float ACCEL_SPEED = 800.0f;
-	private final float MAX_SPEED = 700;
-	private final float TURN_SPEED = 5.0f;
+	private static final float ACCEL_SPEED = 800.0f;
+	private static final float MAX_SPEED = 700;
+	private static final float TURN_SPEED = 5.0f;
+	public static final int INITIAL_HEALTH = 1000;
 
 	protected String name="";
 	protected int kills=0, deaths=0, damageDone=0, damageTaken=0;
@@ -26,7 +27,15 @@ public class Player {
 	protected int turning = 0;
 
 	protected boolean alive = false;
+	int health;
 
+	int[] bulletIndex = new int[65536];
+
+	/** Päivittää pelaajan sijainnin ja nopeusvektorin, ja sijoittaa edellisen sijainnin
+	 * prevLocation-muuttujaan. Tämä metodi ei tarkista mitään törmäyksiä, vaan olettaa
+	 * pelaajan lentävän tyhjässä tilassa.
+	 * @param time nykyisen ja edellisen framen välillä kulunut aika sekunteina
+	 */
 	void update(float time) {
 		// FIXME: tee FPS:stä riippumaton
 		angle += time*turning;
@@ -53,6 +62,9 @@ public class Player {
 		location.x += .5f*(prevVX+speedVec.x)*time;
 		location.y += .5f*(prevVY+speedVec.y)*time;
 	}
+	private static double fmod(double a, double b) {
+		return a-b*Math.floor(a/b);
+	}
 
 	public Point2D.Float getLoc() {
 		return location;
@@ -70,15 +82,13 @@ public class Player {
 		speedVec = new Point2D.Float(0,0);
 		angle = (float)(Math.PI/2);
 		alive = true;
+		health = INITIAL_HEALTH;
 	}
 	public boolean isAlive() {
 		return alive;
 	}
 	public float getAngle() {
 		return angle;
-	}
-	private static double fmod(double a, double b) {
-		return a-b*Math.floor(a/b);
 	}
 	public String getName() {
 		return name;
@@ -94,5 +104,17 @@ public class Player {
 	}
 	public int getTurning() {
 		return turning;
+	}
+	public void setID(int id) {
+		this.id=id;
+	}
+	public void addKills() {
+		kills++;
+	}
+	public int getHealth() {
+		return health;
+	}
+	public void addHitDone() {
+		damageDone += GamePhysics.BULLET_DAMAGE;
 	}
 }

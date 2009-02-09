@@ -63,6 +63,9 @@ class NetPlayer extends Player implements Runnable {
 			case NetListener.TCP_PLAYER_SPAWN:
 				handleSpawn(in);
 				break;
+			case NetListener.TCP_PLAYER_DIE:
+				handleDie(in);
+				break;
 			default:
 				System.out.println("Warning: unknown TCP packet type "+type);
 				break;
@@ -163,6 +166,17 @@ class NetPlayer extends Player implements Runnable {
 
 		out.write(p.isAlive() ? 1 : 0);
 	}
+	private void handleDie(DataInputStream in) throws IOException {
+		int killer = in.read();
+		Player pl = listener.physics.getPlayer(killer);
+		if (pl!=null)
+			pl.addKills();
+
+		int damage = in.readUnsignedShort();
+		damageTaken += damage;
+		deaths++;
+		alive = false;
+	}
 
 	NetPlayer(DataInputStream in, NetListener listener) throws IOException {
 		this.listener = listener;
@@ -205,7 +219,7 @@ class NetPlayer extends Player implements Runnable {
 
 		alive = in.read()==1 ? true : false;
 	}
-	void requestJoin() throws IOException {
+	void requestJoin(int localID) throws IOException {
 		waitingJoinOK = true;
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_JOIN_GAME);
@@ -214,8 +228,7 @@ class NetPlayer extends Player implements Runnable {
 		out.writeShort(listener.tcpSocket.getLocalPort());
 		System.out.println("Sending UDP port: "+listener.udpSocket.getLocalPort());
 		out.writeShort(listener.udpSocket.getLocalPort());
-		genID();
-		out.write(id);
+		out.write(localID);
 
 		byte[] name = listener.localPlayer.getName().getBytes("UTF-8");
 		out.write(name.length);
@@ -245,14 +258,17 @@ class NetPlayer extends Player implements Runnable {
 				updatePlayerState(in);
 				break;
 			case NetListener.UDP_PLAYER_SHOOT:
+				readBullets(in);
 				break;
 			case NetListener.UDP_PLAYER_HIT:
+				readHits(in);
 				break;
 			default:
 				System.out.println("Warning: unknown UDP packet type: "+type);
 		}
 		} catch(IOException e) {
 			System.out.printf("Bad data from client %s : %d\n", socket.getInetAddress().toString(), udpPort);
+			// FIXME: katkaise yhteys?
 		}
 	}
 	private void updatePlayerState(InputStream istream) throws IOException {
@@ -273,5 +289,31 @@ class NetPlayer extends Player implements Runnable {
 		float x = in.readFloat();
 		float y = in.readFloat();
 		spawn(new Point2D.Float(x,y));
+	}
+	private void readBullets(ByteArrayInputStream istream) throws IOException {
+//		System.out.println("jee pateja");
+		DataInputStream in = new DataInputStream(istream);
+		int bulletID = in.readUnsignedShort();
+
+		int count = istream.available()/16;
+		for(int i=0; i<count; ++i) {
+			float x,y,vx,vy;
+			x=in.readFloat();
+			y=in.readFloat();
+			vx=in.readFloat();
+			vy=in.readFloat();
+			Bullet b = new Bullet(x,y,vx,vy,id,bulletID++);
+			listener.addRemoteBullet(b);
+		}
+	}
+	private void readHits(ByteArrayInputStream istream) throws IOException {
+		DataInputStream in = new DataInputStream(istream);
+
+		int count = istream.available()/3;
+		for(int i=0; i<count; ++i) {
+			int shooter = in.readUnsignedByte();
+			int bulletID = in.readUnsignedShort();
+			listener.addRemoteHit(shooter,bulletID);
+		}
 	}
 };
