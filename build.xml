@@ -22,4 +22,17 @@
 		<javadoc access="private" author="true" version="true" destdir="doc" sourcepath="src">
 		</javadoc>
 	</target>
+
+	<target name="test-compile" depends="compile">
+		<javac srcdir="test" debug="on" sourcepath="src" classpath="src"/>
+	</target>
+	<target name="test" depends="test-compile">
+		<junit haltonfailure="true" printsummary="true" showoutput="true">
+			<batchtest>
+				<fileset dir="test">
+					<include name="*.java"/>
+				</fileset>
+			</batchtest>
+		</junit>
+	</target>
 </project>

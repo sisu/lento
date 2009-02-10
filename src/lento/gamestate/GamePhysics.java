@@ -53,6 +53,7 @@ public class GamePhysics {
 		localPlayer.damageTaken += localHealth-localPlayer.health;
 		if (alive && localPlayer.health<=0) {
 			localPlayer.alive = false;
+			localPlayer.deaths++;
 			observer.die(localPlayer.id, Player.INITIAL_HEALTH-localPlayer.health);
 		}
 		for(int i=0; i<bullets.size(); ++i) {
@@ -80,6 +81,9 @@ public class GamePhysics {
 				localPlayer.damageTaken += BULLET_DAMAGE;
 				if (localPlayer.health <= 0) {
 					localPlayer.alive = false;
+					localPlayer.deaths++;
+					if (shooter!=null)
+						shooter.kills++;
 					if (observer!=null)
 						observer.die(b.getShooter(), Player.INITIAL_HEALTH-localPlayer.health);
 				}
@@ -99,8 +103,8 @@ public class GamePhysics {
 		}
 		pl.health -= ((int)(-dot*COLLISION_DAMAGE_FACTOR));
 		System.out.printf("%f\n", dot);
-//		final float asd = 5;
-//		if (dot >= -asd) dot -= asd;
+		final float asd = 3;
+		if (dot >= -asd) dot -= asd;
 		speed.x -= 2*dot*normal.x;
 		speed.y -= 2*dot*normal.y;
 		speed.x *= SLOWDOWN_FACTOR;
@@ -113,11 +117,17 @@ public class GamePhysics {
 		float diffY = pl.location.y-pl.prevLocation.y;
 		float diffDot = diffX*normal.x + diffY*normal.y;
 
+		if (diffDot>=0) {
+			System.out.println("wtf");
+			diffDot = -diffDot;
+		}
+		if (diffDot >= -asd) diffDot -= asd;
+
 		float factor = 2*diffDot*dist/dist2;
 		pl.location.x -= factor*normal.x;
 		pl.location.y -= factor*normal.y;
 
-		final float eps = 1e-6f;
+		final float eps = 1e-3f;
 		pl.prevLocation.x = loc.x+speed.x*eps;
 		pl.prevLocation.y = loc.y+speed.y*eps;
 	}
