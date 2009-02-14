@@ -7,6 +7,12 @@ import java.awt.*;
 import java.awt.geom.*;
 import java.util.*;
 
+/**
+ * NetPlayer pitää kirjaa yhden etäpelaajan tiedoista.
+ * Uusi NetPlayer-olio luodaan jokaiselle palvelimeen yhdistävälle
+ * asiakasohjelmalle, vaikka asiakasohjelma ei vielä olisikaan
+ * liittynyt peliin.
+ */
 class NetPlayer extends Player implements Runnable {
 
 	Socket socket;
@@ -16,11 +22,20 @@ class NetPlayer extends Player implements Runnable {
 	int tcpPort=0;
 	boolean waitingJoinOK = false;
 
+	/** Luo olion uudelle etäpelaajalle.
+	 * @param socket avoin TCP-yhteys etäpelaajaan
+	 * @param listener NetListener-olio, joka pitää kirjaa tämän
+	 *        pelin etäpelaajista
+	 */
 	NetPlayer(Socket socket, NetListener listener) {
 		this.socket = socket;
 		this.listener = listener;
 	}
 
+	/** Alkaa kuunnella TCP-yhteyttä etäpelaajaan, ja käsitellä pelaajalta
+	 * tulevia paketteja. Tästä metodista palaudutaan vasta, kun yhteys
+	 * pelaajaan katkeaa, tai päätetään poistua itse pelistä.
+	 */
 	public void run() {
 		System.out.printf("NetPlayer thread started: %s : %d\n", socket.getInetAddress().toString(), socket.getPort());
 		DataInputStream in=null;
@@ -34,15 +49,24 @@ class NetPlayer extends Player implements Runnable {
 				handleTCPPacket(packetType, in);
 			}
 		} catch(Exception e) {
+			// TCP-yhteyden poikkeuksia ei tarvitse käsitellä erityisesti.
+			// Yhteyden katkeamistilanne tulkitaan aina etäpelaajan poistumisena.
 		} finally {
 			listener.deletePlayer(this);
 			try {
 				if (in!=null)
 					in.close();
 				socket.close();
-			} catch(IOException evvk) {}
+			} catch(IOException e) {
+				// Ei väliä vaikka sulkeminen aiheuttaisi virheen.
+			}
 		}
 	}
+	
+	/** Huolehtii yhdestä etäkoneelta tulleesta TCP-viestistä.
+	 * @param type viestin tyyppi
+	 * @param in syötevirta, josta voi lukea etäpelaajan lähettämää dataa
+	 */
 	private void handleTCPPacket(int type, DataInputStream in) throws IOException {
 		switch(type) {
 			case NetListener.TCP_GET_AREA_INFO:
@@ -71,6 +95,9 @@ class NetPlayer extends Player implements Runnable {
 				break;
 		}
 	}
+
+	/** Lähettää AREA_INFO-paketin etäpelaajalle.
+	 */
 	private void sendAreaInfo() throws IOException {
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_AREA_INFO);
@@ -94,6 +121,9 @@ class NetPlayer extends Player implements Runnable {
 		}
 		out.flush();
 	}
+
+	/** Lähettää PLAYER_INFO-paketin etäpelaajalle.
+	 */
 	private void sendPlayerInfo() throws IOException {
 		System.out.println("asd");
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -119,6 +149,11 @@ class NetPlayer extends Player implements Runnable {
 
 		out.flush();
 	}
+	/** Lukee etäpelaajan lähettämän REQUEST_JOIN-viestin parametrit.
+	 * Funktio päättää näiden perusteella hyväksytäänkö liittyminen,
+	 * ja lähettää vastauksen.
+	 * @param in syötevirta, josta paketin loppuosa voidaan lukea.
+	 */
 	private void handleJoinRequest(DataInputStream in) throws IOException {
 		System.out.println("got join request");
 
@@ -144,6 +179,10 @@ class NetPlayer extends Player implements Runnable {
 			System.out.println("OK sent "+id);
 		}
 	}
+	/** Lähettää yhden etäpelaajan kaikki tiedot osana PLAYER_INFO-pakettia.
+	 * @param out tulostusvirta, jonka kautta viesti välitetään etäkoneelle
+	 * @param p pelaaja, jonka tiedot lähetetään
+	 */
 	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
 		out.write(p.socket.getInetAddress().getAddress(), 0, 4);
 		System.out.printf("sending ports: %d %d\n", p.tcpPort, p.udpPort);
@@ -152,6 +191,12 @@ class NetPlayer extends Player implements Runnable {
 		out.write(p.id);
 		sendSinglePlayerData(out,p);
 	}
+	/** Lähettää yhden pelaajan paikkatiedot osana PLAYER_INFO-pakettia.
+	 * Tämä metodi on erillään sendSinglePlayer-metodista, koska tätä
+	 * voidaan käyttää myös paikallisen pelaajan tietojen lähettämiseen.
+	 * @param out tulostusvirta, jonka kautta viesti välitetään etäkoneelle
+	 * @param p pelaaja, jonka tiedot lähetetään
+	 */
 	private void sendSinglePlayerData(DataOutputStream out, Player p) throws IOException {
 		byte[] name = p.getName().getBytes("UTF-8");
 		out.write(name.length);
@@ -166,6 +211,10 @@ class NetPlayer extends Player implements Runnable {
 
 		out.write(p.isAlive() ? 1 : 0);
 	}
+
+	/** Käsittelee etäkoneelta tulleen viestin etäpelaajan kuolemasta.
+	 * @param in syötevirta, josta viestin loppuosa voidaan lukea.
+	 */
 	private void handleDie(DataInputStream in) throws IOException {
 		int killer = in.read();
 		Player pl = listener.physics.getPlayer(killer);
@@ -179,6 +228,8 @@ class NetPlayer extends Player implements Runnable {
 		alive = false;
 	}
 
+	/** Luo NetPlayer-olion lukemalla tiedot PLAYER_INFO-paketista.
+	 */
 	NetPlayer(DataInputStream in, NetListener listener) throws IOException {
 		this.listener = listener;
 		this.socket = null;

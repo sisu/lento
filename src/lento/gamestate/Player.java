@@ -29,6 +29,9 @@ public class Player {
 	protected boolean alive = false;
 	int health;
 
+	/** Taulukko siitä, missä indeksissä mikäkin tämän pelaajan ampuma 
+	 * ammus sijaitsee GamePhysics-olion taulukossa.
+	 */
 	int[] bulletIndex = new int[65536];
 
 	/** Päivittää pelaajan sijainnin ja nopeusvektorin, ja sijoittaa edellisen sijainnin
@@ -66,12 +69,21 @@ public class Player {
 		return a-b*Math.floor(a/b);
 	}
 
+	/** Palauttaa pelaajan nykyisen sijainnin.
+	 * @return nykyinen sijainti
+	 */
 	public Point2D.Float getLoc() {
 		return location;
 	}
+	/** Palauttaa pelaajan nykyisen nopeusvektorin.
+	 * @return nykyinen nopeusvektori
+	 */
 	public Point2D.Float getSpeedVec() {
 		return speedVec;
 	}
+	/** Palauttaa pelaajan aluksen värin.
+	 * @return aluksen väri
+	 */
 	public Color getColor() {
 		return color;
 	}

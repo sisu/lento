@@ -244,7 +244,7 @@ public class GamePhysics {
 	 * @param pl pelistä poistuva pelaaja
 	 */
 	public void deletePlayer(Player pl) {
-		int i = players.lastIndexOf(pl);
+		int i = playerIndex[pl.id];
 		int size = players.size();
 
 		Player last = players.get(size-1);
@@ -253,9 +253,20 @@ public class GamePhysics {
 
 		playerIndex[last.getID()] = i;
 	}
-	public void setObserver(PhysicsObserver o) {
-		observer = o;
+	/** Asettaa fysiikkatarkkailijan. Oliolle välitetään tiedot ainoastaan paikallisen
+	 * pelaajan tilan muutoksista. Funktion kutsuminen poistaa käytöstä aiemmin
+	 * asetetun tarkkailijan.
+	 * @param observer uusi fysiikkatarkkailija
+	 */
+	public void setObserver(PhysicsObserver observer) {
+		this.observer = observer;
 	}
+	/** Palauttaa ammuksen ampujan pelaaja-ID:n ja ammus-ID:n perusteella.
+	 * @param shooter ampujan pelaaja-ID
+	 * @param id ammuksen ammus-ID
+	 * @return ID-numeroita vastaava ammus
+	 * @return null, jos mikään ammus ei vastaa annettuja tietoja
+	 */
 	public Bullet getBullet(int shooter, int id) {
 		Player pl = players.get(playerIndex[shooter]);
 		if (pl==null)
@@ -265,6 +276,11 @@ public class GamePhysics {
 			return null;
 		return bullets.get(idx);
 	}
+	/** Palauttaa pelaaja-ID:tä vastaavan Pelaaja-olion.
+	 * @param id
+	 * @return ID:tä vastaava pelaaja
+	 * @return null, jos mikään pelaaja ei vastaa ID:tä
+	 */
 	public Player getPlayer(int id) {
 		int num = playerIndex[id];
 		if (num >= players.size())
