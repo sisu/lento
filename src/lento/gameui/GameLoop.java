@@ -14,6 +14,9 @@ public class GameLoop {
 	GameFrame frame;
 	boolean done=false;
 
+	private static final int MAX_FPS = 80;
+	private static final long FRAME_TIME = (long)1e9 / MAX_FPS;
+
 	public GameLoop(File file, String name, Color color) throws IOException {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics(file);
@@ -39,6 +42,7 @@ public class GameLoop {
 		System.out.println("starting game loop");
 
 		long prevTime = System.nanoTime();
+		long nextTime = prevTime;
 		try{
 		while(!done) {
 //			System.out.println("loop");
@@ -82,7 +86,12 @@ public class GameLoop {
 			frame.repaint();
 
 			prevTime = time;
-			Thread.sleep(10);
+//			System.out.println("asd");
+			if (time < nextTime) {
+//				System.out.println("sleeping: "+(nextTime-time)/1000);
+				Thread.sleep((nextTime-time)/1000000);
+			}
+			nextTime += FRAME_TIME;
 //			if (false) throw new InterruptedException();
 		}
 		}catch(InterruptedException e){}
