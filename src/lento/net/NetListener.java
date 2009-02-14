@@ -7,6 +7,15 @@ import java.util.*;
 import java.awt.*;
 import java.awt.geom.*;
 
+/** NetListener huolehtii kaikista peliin liittyneistä etäpelaajista ja
+ * kommunikoinnista niiden kanssa.
+ * NetListener-olio odottaa uusia TCP-yhteyksiä, ja luo uuden NetPlayer-olion
+ * jokaiselle yhdistävälle pelaajalle.
+ * NetListener-huolehtii myös UDP-pakettien lukemisesta, ja antaa paketin
+ * aina sen NetPlayer-olion käsiteltäväksi, jonka verkko-osoitteesta paketti
+ * tuli.
+ * @see lento.net.NetPlayer
+ */
 public class NetListener implements Runnable, PhysicsObserver {
 
 	static public final int DEFAULT_TCP_PORT = 53256;
@@ -43,18 +52,36 @@ public class NetListener implements Runnable, PhysicsObserver {
 
 	private int waitCount=0;
 
+	boolean done=false;
+
+	/** Luo uuden NetPlayer-olion.
+	 * @param physics Tämän pelin tilasta huolehtiva GamePhysics-olio
+	 * @param localPlayer paikallisen pelaajan Player-olio
+	 */
 	public NetListener(GamePhysics physics, Player localPlayer) throws IOException {
 		this.physics = physics;
 		this.localPlayer = localPlayer;
 		tcpSocket = openServerSocket();
 	}
-	public NetListener(GamePhysics physics, Player localPlayer, InetAddress addr, int port) throws IOException {
-		this.physics = physics;
-		this.localPlayer = localPlayer;
-		tcpSocket = openServerSocket();
+	/** Yhdistää verkossa käynnissä olevaan peliin.
+	 * Tämä metodi hakee verkosta kaikki pelin tiedot ja päivittää
+	 * ne @physics-oliolle. Metodista palaudutaan vasta, kun
+	 * peliin liittyminen on kokonaan suoritettu, ja hyväksyntä
+	 * saatu kaikilta pelaajilta.
+	 * @param addr verkko-odoite, johon yhdistetään
+	 * @param port portti, johon yhdistetään
+	 * @return paikalliselle pelaajalle asetettu pelaaja-ID
+	 */
+	public int connect(InetAddress addr, int port) throws IOException {
 		Socket socket = new Socket(addr,port);
-		localPlayer.setID(handleOwnJoin(socket));
+		return handleOwnJoin(socket);
 	}
+
+	/** Luo ja avaa uuden TCP-socketin. Metodi yrittää ensin
+	 * porttia DEFAULT_TCP_PORT, ja jos se ei ole käytettävissä,
+	 * yritetään aina seuraavaa porttia kunnes vapaa portti löytyy.
+	 * @return ServerSocket, johon muut voivat yhdistää.
+	 */
 	private ServerSocket openServerSocket() throws IOException {
 		ServerSocket s;
 		int port = DEFAULT_TCP_PORT;
@@ -71,6 +98,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 		return s;
 	}
 
+	/** Alkaa kuunnella TCP- ja UDP-yhteyksiä.
+	 */
 	public void run() {
 		new Thread(new Runnable() {
 			public void run() {
@@ -78,7 +107,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			}
 		}).start();
 		try {
-			while(true) {
+			while(!done) {
 				Socket socket = tcpSocket.accept();
 				NetPlayer pl = new NetPlayer(socket,this);
 				players.add(pl);
@@ -92,7 +121,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 		try {
 			byte[] buf = new byte[IN_BUFFER_SIZE];
 			DatagramPacket p = new DatagramPacket(buf, buf.length);
-			while(true) {
+			while(!done) {
 				udpSocket.receive(p);
 				ConnectionInfo info = new ConnectionInfo(p.getAddress(), p.getPort());
 				NetPlayer from = playerTable.get(info);

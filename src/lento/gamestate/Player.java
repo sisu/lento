@@ -87,6 +87,12 @@ public class Player {
 	public Color getColor() {
 		return color;
 	}
+	/** Synnyttää kuolleen pelaajan henkiin, ja asettaa pelaajalle uudet sijaintitiedot.
+	 * Metodi asettaa aluksen nopeusvektoriksi nollavektorin ja kulman sellaiseksi,
+	 * että alus osoittaa suoraan ylöspäin.
+	 * Pelaajan osumapisteet asetetaan maksimiarvoonsa.
+	 * @param loc paikka, johon pelaaja syntyy.
+	 */
 	public void spawn(Point2D.Float loc) {
 		System.out.println("spawning to "+loc.x+","+loc.y);
 		location = loc;
@@ -96,36 +102,69 @@ public class Player {
 		alive = true;
 		health = INITIAL_HEALTH;
 	}
+	/** Palauttaa tiedon, onko pelaaja hengissä.
+	 * @return true, jos pelaaja on hengissä
+	 * @return false, jos pelaaja on kuollut
+	 */
 	public boolean isAlive() {
 		return alive;
 	}
+	/** Palauttaa kulman, johon pelaajan alus on kääntynyt.
+	 * Kulma on aina väliltä 0-2pi.
+	 * @return kulma, johon alus on kääntynyt
+	 */
 	public float getAngle() {
 		return angle;
 	}
+	/** Palauttaa pelaajan nimen.
+	 * @return pelaajan nimi
+	 */
 	public String getName() {
 		return name;
 	}
+	/** Palauttaa pelaajan tilastotiedot.
+	 * Tilastotiedot palautetaan taulukkona järjestyksessä:
+	 * tapot, kuolemat, pelaajan tekemä vahinko, pelaajalle aiheutunut vahinko.
+	 * @return 4:n mittainen taulukko tilastotiedoista
+	 */
 	public int[] getStats() {
 		return new int[]{kills,deaths,damageDone,damageTaken};
 	}
+	/** Palauttaa pelaajan pelaaja-ID:n.
+	 * @return pelaajan ID
+	 */
 	public int getID() {
 		return id;
 	}
+	/** Palauttaa tiedon, kiihdyttääkö pelaaja alustaan.
+	 * @return true, jos pelaaja kiihdyttää
+	 * @return false, jos pelaaja ei kiihdytä.
+	 */
 	public boolean getAccelerating() {
 		return accelerating;
 	}
+	/** Palauttaa tiedon siitä, mihin suuntaan pelaaja on kääntämässä alustaan.
+	 * @return 0, jos alus ei ole kääntymässä
+	 * @return 1, jos alus on kääntymässä vastapäivään
+	 * @return -1, jos alus on kääntymässä myötäpäivään
+	 */
 	public int getTurning() {
 		return turning;
 	}
-	public void setID(int id) {
-		this.id=id;
-	}
+	/** Kasvattaa pelaajan tekemien tappojen määrää yhdellä.
+	 */
 	public void addKills() {
 		kills++;
 	}
+	/** Palauttaa pelaajan jäljellä olevat osumapisteet.
+	 * @return osumapisteet, jotka pelaajalla on jäljellä.
+	 */
 	public int getHealth() {
 		return health;
 	}
+	/** Kasvattaa pelaajan tuottamaa vahinkomäärää yhden ammuksen tuottaman
+	 * vahinkomäärän verran.
+	 */
 	public void addHitDone() {
 		damageDone += GamePhysics.BULLET_DAMAGE;
 	}

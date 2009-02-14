@@ -27,7 +27,11 @@ public class GameLoop {
 	public GameLoop(InetAddress addr, int port, String name, Color color) throws IOException {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics();
-		net = new NetListener(physics, localPlayer, addr, port);
+
+		net = new NetListener(physics, localPlayer);
+		int id = net.connect(addr,port);
+		localPlayer.setID(id);
+
 		physics.addPlayer(localPlayer);
 		physics.setObserver(net);
 	}

@@ -77,4 +77,11 @@ class LocalPlayer extends Player implements KeyListener {
 	void recoverShootEnergy(float time) {
 		shootEnergy = Math.min(shootEnergy+time*SHOOT_ENERGY_RECOVER_RATE, MAX_SHOOT_ENERGY);
 	}
+	/** Asettaa uuden ID-numeron pelaajalle.
+	 * @param id uusi pelaaja-ID
+	 */
+	void setID(int id) {
+		this.id=id;
+	}
+
 }

@@ -160,7 +160,7 @@ class NetPlayer extends Player implements Runnable {
 		tcpPort = in.readUnsignedShort();
 		udpPort = in.readUnsignedShort();
 		System.out.printf("Got TCP and UDP ports: %d %d\n", tcpPort, udpPort);
-		id = in.read();
+		int id = in.read();
 
 		int nameLen = in.read();
 		byte[] buf = new byte[nameLen];
@@ -169,11 +169,16 @@ class NetPlayer extends Player implements Runnable {
 		color = NetListener.readColor(in);
 
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-		// FIXME: tarkista onko ID vapaa
-		if (listener.physics.getPlayers().size() >= 127) {
+
+		boolean idOK = true;
+		for(Player pl : listener.physics.getPlayers())
+			if (pl.getID() == id)
+				idOK = false;
+		if (!idOK || listener.physics.getPlayers().size() >= 127) {
 			out.write(NetListener.TCP_JOIN_FAIL);
-			id = -1;
+			this.id = -1;
 		} else {
+			this.id = id;
 			out.write(NetListener.TCP_JOIN_OK);
 			listener.playerJoined(this);
 			System.out.println("OK sent "+id);
@@ -229,18 +234,31 @@ class NetPlayer extends Player implements Runnable {
 	}
 
 	/** Luo NetPlayer-olion lukemalla tiedot PLAYER_INFO-paketista.
+	 * @param in syötevirta, josta tämän pelaajan tiedot voidaan lukea
+	 * @param listener tämän pelin etäpelaajista huolehtiva NetListener-olio
 	 */
 	NetPlayer(DataInputStream in, NetListener listener) throws IOException {
 		this.listener = listener;
 		this.socket = null;
 		readInitialData(in);
 	}
+	/** Luo NetPlayer-olion lukemalla verkko-osoitetta lukuunottamatta tiedot
+	 * PLAYER_INFO-paketista.
+	 * @param in syötevirta, josta tämän etäpelaajan tiedot voidaan lukea
+	 * @param listener tämän pelin etäpelaajista huolehtiva NetListener-olio
+	 * @param socket avoin TCP-yhteys tähän etäpelaajaan
+	 */
 	NetPlayer(DataInputStream in, NetListener listener, Socket socket) throws IOException {
 		this.listener = listener;
 		this.socket = socket;
 		readInitialData(in);
 	}
 
+	/** Lukee pelaajan tiedot PLAYER_INFO-paketista.
+	 * Jos tätä kutsuttaessa socket==null, pyrkii yhdistämään paketista
+	 * löytyvään verkko-osoitteeseen, ja muuten jättää osoitteen huomiotta.
+	 * @param in syötevirta, josta tämän etäpelaajan tiedot voidaan lukea
+	 */
 	private void readInitialData(DataInputStream in) throws IOException {
 		byte[] buf = new byte[4];
 		in.readFully(buf);
@@ -271,6 +289,11 @@ class NetPlayer extends Player implements Runnable {
 
 		alive = in.read()==1 ? true : false;
 	}
+
+	/** Lähettää tälle etäpelaajalle pyynnöt paikallisen pelaajan
+	 * liittymisestä peliin.
+	 * @param localID paikallisen pelaajan pelaaja-ID
+	 */
 	void requestJoin(int localID) throws IOException {
 		waitingJoinOK = true;
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -288,20 +311,12 @@ class NetPlayer extends Player implements Runnable {
 
 		NetListener.writeColor(out, listener.localPlayer.getColor());
 	}
-	private void genID() {
-		boolean ok;
-		do {
-			ok = true;
-			id = (int)(Math.random()*128);
-			for(Player pl : listener.physics.getPlayers())
-				if (pl.getID()==id) {
-					ok=false;
-					break;
-				}
-		} while(!ok);
-	}
-	void handleUDPPacket(DatagramPacket p) throws IOException {
-		ByteArrayInputStream in = new ByteArrayInputStream(p.getData(), 0, p.getLength());
+	
+	/** Käsittelee tältä etäpelaajalta tulleen UDP-paketin.
+	 * @param packet käsiteltävä UDP-paketti
+	 */
+	void handleUDPPacket(DatagramPacket packet) throws IOException {
+		ByteArrayInputStream in = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
 		int type = in.read();
 //		System.out.println("Paketti: "+type);
 		try {
@@ -323,6 +338,10 @@ class NetPlayer extends Player implements Runnable {
 			// FIXME: katkaise yhteys?
 		}
 	}
+
+	/** Lukee PLAYER_STATE-paketista etäpelaajan uuden tilan.
+	 * @param istream syötevirta, josta paketin sisältö voidaan lukea
+	 */
 	private void updatePlayerState(InputStream istream) throws IOException {
 		DataInputStream in = new DataInputStream(istream);
 		location.x = prevLocation.x = in.readFloat();
@@ -337,11 +356,19 @@ class NetPlayer extends Player implements Runnable {
 		else if ((mask&0x4)!=0) turning = -1;
 		else turning = 0;
 	}
+	/** Käsittelee etäpelaajalta tulleen PLAYER_SPAWN-viestin.
+	 * Kutsuu Player.spawn(float,float)-funktiota saamillaan tiedoilla.
+	 * @param in syötevirta, josta viestin sisältö voidaan lukea
+	 */
 	private void handleSpawn(DataInputStream in) throws IOException {
 		float x = in.readFloat();
 		float y = in.readFloat();
 		spawn(new Point2D.Float(x,y));
 	}
+	/** Käsittelee etäpelaajalta tulleen PLAYER_SHOOT-viestin.
+	 * Luo paketissa määritellyt ammukset listener.addRemoteBullet-metodilla.
+	 * @param istream syötevirta, josta paketin sisältö voidaan lukea
+	 */
 	private void readBullets(ByteArrayInputStream istream) throws IOException {
 //		System.out.println("jee pateja");
 		DataInputStream in = new DataInputStream(istream);
@@ -358,6 +385,11 @@ class NetPlayer extends Player implements Runnable {
 			listener.addRemoteBullet(b);
 		}
 	}
+	/** Käsittelee etäpelaajalta tulleen PLAYER_HIT-viestin.
+	 * Kutsuu listener.addRemoteHit-metodia huolehtiakseen
+	 * pelistä poistuneista ammuksista.
+	 * @param istream syötevirta, josta paketin sisältö voidaan lukea
+	 */
 	private void readHits(ByteArrayInputStream istream) throws IOException {
 		DataInputStream in = new DataInputStream(istream);
 

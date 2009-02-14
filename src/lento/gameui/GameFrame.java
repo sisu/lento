@@ -145,8 +145,17 @@ class GameFrame extends JFrame {
 		for(int i=1; i<5; ++i)
 			g2.drawString(titles[i], NAME_LEFT_SPACE+NAME_FIELD_SIZE+(i-1)*FIELD_W_SIZE, SCORE_UP_SPACE);
 
+		ArrayList<Player> players = new ArrayList<Player>(physics.getPlayers());
+		Collections.sort(players, new Comparator() {
+			public int compare(Object a, Object b) {
+				int[] s1 = ((Player)a).getStats();
+				int[] s2 = ((Player)b).getStats();
+				return (int)((long)s1[1]*s2[0] - (long)s2[1]*s1[0]);
+			}
+		});
+
 		int x=1;
-		for(Player pl : physics.getPlayers()) {
+		for(Player pl : players) {
 			g2.setColor(pl.getColor());
 			g2.drawString(pl.getName(), NAME_LEFT_SPACE, SCORE_UP_SPACE+x*FIELD_H_SIZE);
 			int[] stats = pl.getStats();
