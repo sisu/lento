@@ -53,10 +53,11 @@ class LocalPlayer extends Player implements KeyListener {
 			case KeyEvent.VK_LEFT:
 				turning += ic;
 				turning = Math.max(turning, -1);
+				turning = Math.min(turning, 1);
 				break;
 			case KeyEvent.VK_RIGHT:
 				turning -= ic;
-				turning = Math.min(turning, 1);
+				turning = Math.max(turning, -1);
 				break;
 			case KeyEvent.VK_SPACE:
 				nextShootTime = Math.max(nextShootTime,System.nanoTime());

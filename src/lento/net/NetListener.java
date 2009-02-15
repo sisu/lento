@@ -44,9 +44,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	HashMap<ConnectionInfo,NetPlayer> playerTable = new HashMap<ConnectionInfo,NetPlayer>();
 
 	ArrayList<Bullet> localShoots = new ArrayList<Bullet>();
-	ArrayList<Bullet> remoteShoots = new ArrayList<Bullet>();
 	ArrayList<Bullet> localHits = new ArrayList<Bullet>();
-	ArrayList<Bullet> remoteHits = new ArrayList<Bullet>();
 
 	private PacketOutputStream outBuffer = new PacketOutputStream(OUT_BUFFER_SIZE);
 
@@ -401,18 +399,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 
 			localHits.clear();
 		}
-		synchronized(remoteShoots) {
-			for(Bullet b : remoteShoots) {
-				physics.addBullet(b);
-			}
-			remoteShoots.clear();
-		}
-		synchronized(remoteHits) {
-			for(Bullet b : remoteHits) {
-				physics.deleteBullet(b);
-			}
-			remoteHits.clear();
-		}
 	}
 	void playerJoined(NetPlayer pl) {
 		physics.addPlayer(pl);
@@ -442,9 +428,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	// PhysicsObserver end
 
 	void addRemoteBullet(Bullet b) {
-		synchronized(remoteShoots) {
-			remoteShoots.add(b);
-		}
+		physics.addBullet(b);
 	}
 	void addRemoteHit(int shooter, int id) {
 		if (id > 0) {
@@ -452,11 +436,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			if (pl!=null)
 				pl.addHitDone();
 		}
-		synchronized(remoteHits) {
-			Bullet b = physics.getBullet(shooter,id);
-			if (b!=null)
-				remoteHits.add(b);
-		}
+		physics.deleteBullet(shooter, id);
 	}
 	private int genID() {
 		int id=0;

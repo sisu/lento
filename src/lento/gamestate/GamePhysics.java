@@ -37,7 +37,7 @@ public class GamePhysics {
 	 * @param time edellisestä framesta kulunut aika sekunteina
 	 * @param localPlayer paikallinen pelaaja
 	 */
-	public void update(float time, Player localPlayer) {
+	public synchronized void update(float time, Player localPlayer) {
 		int localHealth = localPlayer.health;
 		boolean alive = localPlayer.alive;
 		for(Player pl : players) {
@@ -143,7 +143,7 @@ public class GamePhysics {
 		if (pl!=null)
 			pl.bulletIndex[last.getID()] = i;
 	}
-	public void deleteBullet(Bullet b) {
+	public synchronized void deleteBullet(Bullet b) {
 		Player pl = players.get(playerIndex[b.getShooter()]);
 		deleteBullet(pl.bulletIndex[b.getID()]);
 	}
@@ -151,7 +151,7 @@ public class GamePhysics {
 	/** Lisää pelaajan pelaajien listaan.
 	 * @param pl lisättävä pelaaja
 	 */
-	public void addPlayer(Player pl) {
+	public synchronized void addPlayer(Player pl) {
 		playerIndex[pl.getID()] = players.size();
 		players.add(pl);
 		// TODO: allocate stuff for bullets
@@ -159,7 +159,7 @@ public class GamePhysics {
 	/** Lisää ammuksen ilmassa olevien ammusten listaan.
 	 * @param b ammuttu ammus
 	 */
-	public void addBullet(Bullet b) {
+	public synchronized void addBullet(Bullet b) {
 		Player pl = players.get(playerIndex[b.getShooter()]);
 		pl.bulletIndex[b.getID()] = bullets.size();
 		bullets.add(b);
@@ -176,7 +176,7 @@ public class GamePhysics {
 	 * @param maxCount maksimimäärä, paljonko ammuksia voidaan tuottaa tällä kutsukerralla
 	 * @return ammuttujen ammusten määrä
 	 */
-	public int createLocalBullets(Player player, long prevTime, long curTime, long nextShootTime, int nextID, int maxCount) {
+	public synchronized int createLocalBullets(Player player, long prevTime, long curTime, long nextShootTime, int nextID, int maxCount) {
 		long tDiff = curTime-prevTime;
 		int count=0;
 		while(count < maxCount && nextShootTime < curTime) {
@@ -243,7 +243,7 @@ public class GamePhysics {
 	/** Poistaa pelaajan pelaajien listalta.
 	 * @param pl pelistä poistuva pelaaja
 	 */
-	public void deletePlayer(Player pl) {
+	public synchronized void deletePlayer(Player pl) {
 		int i = playerIndex[pl.id];
 		int size = players.size();
 
@@ -289,5 +289,16 @@ public class GamePhysics {
 		if (pl.id != id)
 			return null;
 		return pl;
+	}
+	/** Poistaa ammuksen pelistä.
+	 * @param shooter ammuksen ampujan pelaaja-ID
+	 * @param id ammuksen ID
+	 */
+	public synchronized void deleteBullet(int shooter, int id) {
+		Player pl = players.get(playerIndex[shooter]);
+		if (pl==null || pl.id!=shooter)
+			return; // ei ole virhe, pelaaja on voinut poistua ammuttuaan.
+		int idx = pl.bulletIndex[id];
+		deleteBullet(idx);
 	}
 };
