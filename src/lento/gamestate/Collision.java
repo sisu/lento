@@ -2,7 +2,7 @@ package lento.gamestate;
 
 import java.awt.geom.*;
 
-/*
+/**
  * Sisältää tiedon kentän esteen tai reunan ja siihen osuneen
  * välisestä törmäyksestä.
  */

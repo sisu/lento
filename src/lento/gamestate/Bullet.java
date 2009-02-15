@@ -2,7 +2,7 @@ package lento.gamestate;
 
 import java.awt.geom.*;
 
-/*
+/**
  * Sisältää tiedot yhdestä ilmassa olevasta ammuksesta.
  */
 public class Bullet {

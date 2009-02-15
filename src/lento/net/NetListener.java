@@ -113,10 +113,14 @@ public class NetListener implements Runnable, PhysicsObserver {
 				players.add(pl);
 				new Thread(pl).start();
 			}
+		} catch(SocketException e) {
+			done = true;
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
+	/** Alkaa odottaa UDP-paketteja ja välittää niitä NetPlayer-olioille.
+	 */
 	private void listenUDP() {
 		try {
 			byte[] buf = new byte[IN_BUFFER_SIZE];
@@ -130,16 +134,26 @@ public class NetListener implements Runnable, PhysicsObserver {
 				else
 					from.handleUDPPacket(p);
 			}
+		} catch(SocketException e) {
+			done = true;
 		} catch(IOException e) {
+			e.printStackTrace();
 		}
 	}
 
-	void deletePlayer(NetPlayer pl) {
-		physics.deletePlayer(pl);
-		players.remove(pl);
-//		playerTable.remove();
+	/** Poistaa etäpelaajan pelistä.
+	 * @param player poistettava pelaaja
+	 */
+	void deletePlayer(NetPlayer player) {
+		physics.deletePlayer(player);
+		players.remove(player);
+		playerTable.remove(new ConnectionInfo(player));
 	}
 
+	/** Pyytää etäpelaajalta pelin tiedot ja liittyy sen jälkeen itse peliin.
+	 * Metodista palaudutaan vasta, kun peliin liittyminen on täysin suoritettu.
+	 * @param initial TCP-yhteys etäpelaajaan, jolta pelin tiedot haetaan.
+	 */
 	private int handleOwnJoin(Socket initial) throws IOException {
 		DataOutputStream out = new DataOutputStream(initial.getOutputStream());
 		DataInputStream in = new DataInputStream(initial.getInputStream());
@@ -151,6 +165,11 @@ public class NetListener implements Runnable, PhysicsObserver {
 		requestJoins(id);
 		return id;
 	}
+
+	/** Kysyy etäpelaajalta pelialueen tietoja, ja lukee vastauksen.
+	 * @param in syötevirta, josta etäpelaajan vastaus voidaan lukea
+	 * @param out tulostusvirta, johon kirjoitettu dataa menee etäpelaajalle
+	 */
 	private void getAreaInfo(DataInputStream in,DataOutputStream out) throws IOException {
 		out.write(TCP_GET_AREA_INFO);
 		out.flush();
@@ -184,6 +203,11 @@ public class NetListener implements Runnable, PhysicsObserver {
 			geom.addPolygon(poly);
 		}
 	}
+	/** Kysyy etäpelaajalta pelaajien tietoja, lukee vastauksen ja ottaa yhteyden kaikkiin pelaajiin.
+	 * @param in syötevirta, josta etäpelaajan vastaus voidaan lukea
+	 * @param out tulostusvirta, johon kirjoitettu dataa menee etäpelaajalle
+	 * @param connected avoin TCP-yhteys etäpelaajaan, jolta tietoja kysytään
+	 */
 	private void getPlayerInfo(DataInputStream in, DataOutputStream out, Socket connected) throws IOException {
 		out.write(TCP_GET_PLAYER_INFO);
 		out.flush();
@@ -206,6 +230,11 @@ public class NetListener implements Runnable, PhysicsObserver {
 			playerTable.put(new ConnectionInfo(pl), pl);
 		}
 	}
+
+	/** Lähettää kaikille etäpelaajille peliinliittymispyynnön, ja odottaa vastauksia.
+	 * Metodista palaudutaan vasta, kun kaikilta pelaajilta on saatu hyväksyntä.
+	 * @param id paikallisen pelaajan pelaaja-id
+	 */
 	private synchronized void requestJoins(int id) throws IOException {
 		waitCount = players.size();
 		System.out.println("players to wait for: "+waitCount);
@@ -220,7 +249,13 @@ public class NetListener implements Runnable, PhysicsObserver {
 		}
 	}
 
+	/** Vapauttaa kaikki tämän olion ja sen hallitsemien NetPlayer-olioiden
+	 * käytössä olevat resurssit.
+	 */
 	public void cleanUp() throws IOException {
+		done = true;
+		tcpSocket.close();
+		udpSocket.close();
 		for(Iterator<NetPlayer> i=players.iterator(); i.hasNext(); ) {
 			NetPlayer pl = i.next();
 			pl.done = true;
@@ -228,6 +263,10 @@ public class NetListener implements Runnable, PhysicsObserver {
 		}
 	}
 
+	/** Kertoo, että yksi verkkopelaajista on hyväksynyt paikallisen pelaajan
+	 * liittymisen peliin. Peliin liittyessä kaikkien NetPlayer-olioiden
+	 * odotetaan kutsuvan tätä metodia saatuaan hyväksynnän.
+	 */
 	synchronized void gotJoinOK(NetPlayer pl) {
 		physics.addPlayer(pl);
 		playerTable.put(new ConnectionInfo(pl), pl);
@@ -235,11 +274,20 @@ public class NetListener implements Runnable, PhysicsObserver {
 		notify();
 	}
 
+	/** Lukee syötevirrasta RGB-värin värikomponentit ja tekee niistä Color-olion.
+	 * Metodi lukee syötevirrasta tasan 3 tavua.
+	 * @param in syötevirta, josta väri luetaan
+	 * @return luettu väri
+	 */
 	static Color readColor(DataInputStream in) throws IOException {
 		int r=in.readUnsignedByte(), g=in.readUnsignedByte(), b=in.readUnsignedByte();
 		System.out.printf("Got color: %d %d %d\n", r,g,b);
 		return new Color(r,g,b);
 	}
+	/** Kirjoittaa tulostusvirtaan värin RGB-muodossa kolmena tavuna.
+	 * @param out tulostusvirta, johon värin komponenttien arvot kirjoitetaan
+	 * @param c väri, joka kirjoitetaan tulostusvirtaan
+	 */
 	static void writeColor(DataOutputStream out, Color c) throws IOException {
 		System.out.printf("sending colors: %d %d %d\n", c.getRed(),c.getGreen(),c.getBlue());
 		out.write(c.getRed());
@@ -247,6 +295,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 		out.write(c.getBlue());
 	}
 
+	/** Lähettää kaikille etäpelaajille tiedon paikallisen pelaajan uudelleensyntymästä.
+	 */
 	public void sendSpawn() throws IOException {
 		outBuffer.reset();
 		DataOutputStream out = new DataOutputStream(outBuffer);
@@ -258,13 +308,11 @@ public class NetListener implements Runnable, PhysicsObserver {
 
 		sendTCPPacket(outBuffer.getData(), outBuffer.size());
 	}
-	void sendUDPPacket(DatagramPacket packet) throws IOException {
-		for(NetPlayer pl : players) {
-			packet.setAddress(pl.socket.getInetAddress());
-			packet.setPort(pl.udpPort);
-			udpSocket.send(packet);
-		}
-	}
+	
+	/** Lähettää UDP-paketin kaikille etäpelaajille.
+	 * @param buf taulukko, jonka alusta lähetettävä data luetaan
+	 * @param length lähetettävän viestin pituus
+	 */
 	void sendUDPPacket(byte[] buf, int length) throws IOException {
 		DatagramPacket packet = new DatagramPacket(buf, length);
 		for(NetPlayer pl : players) {
@@ -275,6 +323,10 @@ public class NetListener implements Runnable, PhysicsObserver {
 			udpSocket.send(packet);
 		}
 	}
+	/** Lähettää TCP-paketin kaikille etäpelaajille.
+	 * @param buf taulukko, jonka alusta lähetettävä data luetaan
+	 * @param length lähetettävän viestin pituus
+	 */
 	void sendTCPPacket(byte[] buf, int length) throws IOException {
 		for(NetPlayer pl : players) {
 			if (pl.getID()<0) continue;
@@ -285,6 +337,9 @@ public class NetListener implements Runnable, PhysicsObserver {
 		}
 	}
 
+	/** Päivittää framen aikana tapahtuneet muutokset physics-oliolle ja
+	 * lähettää paikalliset muutokset etäpelaajille.
+	 */
 	public void updateChanges() throws IOException {
 		if (localPlayer.isAlive()) {
 			// lähetä uusi sijainti

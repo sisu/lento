@@ -5,7 +5,7 @@ import java.awt.geom.*;
 import java.util.*;
 import java.io.*;
 
-/*
+/**
  * AreaGeometry pitää kirjaa alueen koosta ja esteistä, ja tarjoaa mahdollisuuden tarkistaa, osuuko viiva polygonin reunaan.
  */
 public class AreaGeometry {

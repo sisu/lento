@@ -3,7 +3,7 @@ package lento.gamestate;
 import java.awt.*;
 import java.awt.geom.*;
 
-/*
+/**
  * Luokka sisältää yksittäisen pelaajan tiedot pelin aikana.
  */
 public class Player {

@@ -4,7 +4,7 @@ import java.util.*;
 import java.awt.geom.*;
 import java.io.*;
 
-/*
+/**
  * GamePhysics pitää kirjaa pelialueesta ja kaikista pelin pelaajista ja ammuksista, ja huolehtii näiden päivityksistä.
  */
 public class GamePhysics {
