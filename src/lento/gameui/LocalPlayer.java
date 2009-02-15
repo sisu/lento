@@ -23,6 +23,11 @@ class LocalPlayer extends Player implements KeyListener {
 	int nextBulletID=0;
 	float shootEnergy;
 
+	/** Luo olion paikalliselle pelaajalle.
+	 * @param loop pelin päivityksestä huolehtiva GameLoop-olio
+	 * @param name pelaajan nimi
+	 * @param color pelaajan aluksen väri
+	 */
 	LocalPlayer(GameLoop loop, String name, Color color) {
 		gameLoop = loop;
 		this.name = name;
@@ -31,6 +36,11 @@ class LocalPlayer extends Player implements KeyListener {
 		id = 1;
 	}
 
+	// KeyListener-rajapinta
+
+	/** Huolehtii näppäimen painalluksesta.
+	 * @param e näppäimistötapahtuma
+	 */
 	public void keyPressed(KeyEvent e) {
 		int key = e.getKeyCode();
 		if (key==KeyEvent.VK_ESCAPE)
@@ -38,13 +48,23 @@ class LocalPlayer extends Player implements KeyListener {
 		else
 			handleMove(key, true);
 	}
+	/** Huolehtii näppäimen irrotuksesta.
+	 * @param e näppäimistötapahtuma
+	 */
 	public void keyReleased(KeyEvent e) {
 		handleMove(e.getKeyCode(), false);
 	}
+	/** Kutsut tälle funktiolle jätetään huomiotta.
+	 */
 	public void keyTyped(KeyEvent e) {
 	}
+	// KeyListener loppu
 
-	void handleMove(int key, boolean change) {
+	/** Päättää mitä tehdään, kun näppäintä aletaan painaa tai lakataan painamasta.
+	 * @param key näppäin, jonka tila muuttui
+	 * @param change true, jos näppäintä painettiin, false jos se päästettiin ylös
+	 */
+	private void handleMove(int key, boolean change) {
 		int ic = change ? 1 : -1;
 		switch(key) {
 			case KeyEvent.VK_UP:
@@ -70,11 +90,19 @@ class LocalPlayer extends Player implements KeyListener {
 				break;
 		}
 	}
+
+	/** Herättää pelaajan henkiin.
+	 * @param loc sijainti, johon pelaaja syntyy
+	 */
 	public void spawn(Point2D.Float loc) {
 		super.spawn(loc);
 		shootEnergy = MAX_SHOOT_ENERGY;
 		nextShootTime = System.nanoTime();
 	}
+
+	/** Palauttaa ampumisenergiaa sen verran, kuin sitä on framen aikana ehtinyt tulla.
+	 * @param time edellisestä palautuskerrasta kulunut aika sekunteina
+	 */
 	void recoverShootEnergy(float time) {
 		shootEnergy = Math.min(shootEnergy+time*SHOOT_ENERGY_RECOVER_RATE, MAX_SHOOT_ENERGY);
 	}

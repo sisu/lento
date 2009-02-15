@@ -3,10 +3,16 @@ package lento.menu;
 import javax.swing.*;
 import java.awt.event.*;
 
+/**
+ * Paneeli, jonka kautta voi liittyä käynnissä olevaan peliin.
+ */
 class JoinPanel extends JPanel {
 
 	JTextField hostField, portField;
 
+	/** Luo paneelin.
+	 * @param listener olio, joka huolehtii napinpainallusten aiheuttamista tapahtumista
+	 */
 	JoinPanel(ActionListener listener) {
 		setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
 

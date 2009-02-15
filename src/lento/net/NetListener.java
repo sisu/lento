@@ -335,8 +335,9 @@ public class NetListener implements Runnable, PhysicsObserver {
 		}
 	}
 
-	/** Päivittää framen aikana tapahtuneet muutokset physics-oliolle ja
-	 * lähettää paikalliset muutokset etäpelaajille.
+	/** Lähettää paikalliset muutokset etäpelaajille.
+	 * Jos pelaaja on hengissä, lähetetään uudet sijaintitiedot.
+	 * Jos pelaaja ampui tai pelaajaan osui ammuksia, lähetetään tiedot näistä.
 	 */
 	public void updateChanges() throws IOException {
 		if (localPlayer.isAlive()) {
@@ -400,18 +401,36 @@ public class NetListener implements Runnable, PhysicsObserver {
 			localHits.clear();
 		}
 	}
+
+	/** Liittää pelaajan peliin. Tätä metodia ei kutsuta kaikille yhteyden
+	 * muodostaville, vaan vasta, kun etäpelaaja on lähettänyt liittymispyynnön.
+	 * @param pl peliin liittyvä etäpelaaja
+	 */
 	void playerJoined(NetPlayer pl) {
 		physics.addPlayer(pl);
 		playerTable.put(new ConnectionInfo(pl), pl);
 	}
 
-	// PhysicsObserver-kamat
+
+	// PhysicsObserver-rajapinnan toteutus
+
+	/** Merkitsee lähetettäväksi tiedon, että paikallinen pelaaja on ampunut.
+	 * @param b pelaajan ampuma ammus
+	 */
 	public void shoot(Bullet b) {
 		localShoots.add(b);
 	}
+	/** Merkitsee lähetettäväksi tiedon, että paikalliseen pelaajaan on osunut
+	 * ammus.
+	 * @param b pelaajaan osunut ammus
+	 */
 	public void hit(Bullet b) {
 		localHits.add(b);
 	}
+	/** Lähettää etäpelaajille tiedon paikallisen pelaajan kuolemasta.
+	 * @param killer pelaajan tappaneen ammuksen ampujan pelaaja-ID
+	 * @param damage pelaajalle aiheutunut vahinko hänen ollessaan hengissä
+	 */
 	public void die(int killer, int damage) {
 		try {
 			outBuffer.reset();
@@ -425,26 +444,32 @@ public class NetListener implements Runnable, PhysicsObserver {
 			e.printStackTrace();
 		}
 	}
-	// PhysicsObserver end
+	// PhysicsObserver-rajapinta
 
-	void addRemoteBullet(Bullet b) {
-		physics.addBullet(b);
-	}
-	void addRemoteHit(int shooter, int id) {
-		if (id > 0) {
+	/** Poistaa ammuksen pelistä ja kasvattaa ampujan osumatilastoja.
+	 * @param shooter ampujan pelaaja-ID
+	 * @param id ammuksen ID
+	 * @param selfHit tosi, joss ammus osui ampujaan itseensä
+	 */
+	void addRemoteHit(int shooter, int id, boolean selfHit) {
+		if (!selfHit) {
 			Player pl = physics.getPlayer(shooter);
 			if (pl!=null)
 				pl.addHitDone();
 		}
 		physics.deleteBullet(shooter, id);
 	}
+	
+	/** Generoi vapaan pelaaja-ID:n.
+	 * @return väliltä 0-127 oleva numero, joka ei ole minkään pelaajan käytössä
+	 */
 	private int genID() {
 		int id=0;
 		boolean ok;
 		do {
 			ok = true;
 			id = (int)(Math.random()*128);
-			for(Player pl : physics.getPlayers())
+			for(Player pl : players)
 				if (pl.getID()==id) {
 					ok=false;
 					break;

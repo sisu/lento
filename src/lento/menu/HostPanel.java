@@ -3,10 +3,16 @@ package lento.menu;
 import javax.swing.*;
 import java.awt.event.*;
 
+/**
+ * Paneeli, jonka kautta voi luoda uuden pelin.
+ */
 class HostPanel extends JPanel implements ActionListener {
 
 	JTextField filename;
 
+	/** Luo paneelin.
+	 * @param listener olio, jota kutsutaan, kun käyttäjä painaa "Luo uusi peli"-nappia
+	 */
 	HostPanel(ActionListener listener) {
 		setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
 
@@ -29,6 +35,11 @@ class HostPanel extends JPanel implements ActionListener {
 		b.addActionListener(listener);
 		add(b);
 	}
+
+	/** Käsittelee tilanteen, jossa käyttäjä painaa tiedostonvalintanappia.
+	 * Avaa tiedostonvalintaikkunan ja päivittää valitun kenttätiedoston.
+	 * @param e tieto napista, jota käyttäjä painoi
+	 */
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("browse")) {
 			JFileChooser fc = new JFileChooser("./lev/");

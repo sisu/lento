@@ -8,12 +8,18 @@ import java.awt.event.*;
 import java.io.*;
 import java.net.*;
 
+/**
+ * MenuFrame on pelin valikkoikkuna.
+ */
 public class MenuFrame extends JFrame implements ActionListener {
 
 	private PlayerInfoPanel playerInfo;
 	private HostPanel host;
 	private JoinPanel join;
+	private GameLoop loop;
 
+	/** Luo valikkoikkunan ja siihen kuuluvat paneelit.
+	 */
 	public MenuFrame() {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		setTitle("Lento");
@@ -31,11 +37,17 @@ public class MenuFrame extends JFrame implements ActionListener {
 
 		pack();
 	}
+
+	/** Huolehtii pelinaloittamisnapin painalluksesta.
+	 * Luo uuden pelin tai yhdistää peliin riippuen siitä, mitä nappia painettiin.
+	 * Siirtyy pelitilaan ja piilottaa valikon kunne pelitilasta poistutaan.
+	 * @param ae tieto painetusta napista
+	 */
 	public void actionPerformed(ActionEvent ae) {
 		String action = ae.getActionCommand();
 		System.out.println(action);
 		try {
-			GameLoop loop=null;
+			loop=null;
 			String name=playerInfo.nameField.getText();
 			Color color = playerInfo.color;
 			if (action.equals("host")) {
@@ -46,28 +58,27 @@ public class MenuFrame extends JFrame implements ActionListener {
 				loop = new GameLoop(addr,port,name,color);
 			}
 			if (loop!=null) {
-				new GameStarter(loop,this).start();
+				new Thread(new Runnable() {
+					public void run() {
+						setVisible(false);
+						try {
+							loop.start();
+						} catch(IOException e) {
+							e.printStackTrace();
+						}
+						setVisible(true);
+					}
+				}).start();
 			}
 		} catch(Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
 	}
-	private class GameStarter extends Thread {
-		private GameLoop loop;
-		MenuFrame menu;
-		GameStarter(GameLoop loop, MenuFrame menu) {
-			this.loop = loop;
-			this.menu = menu;
-		}
-		public void run() {
-			menu.setVisible(false);
-			try {
-				loop.start();
-			} catch(IOException e) {
-				e.printStackTrace();
-			}
-			menu.setVisible(true);
-		}
+
+	/** Luo ja asettaa näkyville alkuvalikon.
+	 */
+	public static void main(String[] args) {
+		new MenuFrame().setVisible(true);
 	}
 }

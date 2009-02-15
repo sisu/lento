@@ -8,6 +8,10 @@ import java.awt.image.*;
 import java.awt.event.*;
 import java.util.*;
 
+/**
+ * GameFrame piirtää peliruutua pelin ollessa käynnissä.
+ * Luokka huolehtii sekä tavallisen peliruudun että pistenäytön piirtämisestä.
+ */
 class GameFrame extends JFrame {
 
 	private static final Polygon craftPolygon = new Polygon(new int[]{-10,0,10,0}, new int[]{-10,5,-10,10}, 4);
@@ -22,6 +26,10 @@ class GameFrame extends JFrame {
 	boolean scoreViewMode = false;
 	int frameCount=0;
 
+	/** Luo GameFrame-olion ja avaa uuden ikkunan piirtoa varten.
+	 * @param physics Pelin fysiikasta huolehtiva olio
+	 * @param localPlayer paikallinen pelaaja
+	 */
 	GameFrame(GamePhysics physics, LocalPlayer localPlayer) {
 		super("Lento");
 		this.physics = physics;
@@ -35,13 +43,21 @@ class GameFrame extends JFrame {
 		// tab-näppäimen luku ei onnistu ilman tätä
 		setFocusTraversalKeysEnabled(false);
 	}
+
+	/** Piirtää yhden framen.
+	 * Valitsee, piirretäänkö normaali pelinäkymä vai pistenäyttö ja
+	 * huolehtii kaksoispuskuroinnista.
+	 */
 	public void repaint() {
 //		System.out.println("jee");
 		BufferStrategy bs = getBufferStrategy();
 		Graphics g=null;
 		try {
 			g = bs.getDrawGraphics();
-			paint(g);
+			if (scoreViewMode)
+				drawScoreTable(g);
+			else
+				paint(g);
 		} finally {
 			g.dispose();
 		}
@@ -49,13 +65,12 @@ class GameFrame extends JFrame {
 		Toolkit.getDefaultToolkit().sync();
 	}
 
+	/** Piirtää normaalin peliruudun.
+	 * Kuvakulma valitaan paikallisen pelaajan sijainnin perusteella.
+	 * @param g grafiikkaolio, jonka kautta piirto tehdään
+	 */
 	public void paint(Graphics g) {
 		Graphics2D g2 = (Graphics2D)g;
-
-		if (scoreViewMode) {
-			drawScoreTable(g2);
-			return;
-		}
 
 		g2.setColor(Color.black);
 		int w=getWidth(), h=getHeight();
@@ -128,6 +143,9 @@ class GameFrame extends JFrame {
 
 		++frameCount;
 	}
+
+	// Pistenäytön piirtoon liittyvät vakiot
+
 	private static final String[] titles = new String[]{"nimi","tapot","kuolemat","osumat","osuttu"};
 	private static final int NAME_LEFT_SPACE = 20;
 	private static final int NAME_FIELD_SIZE = 150;
@@ -135,7 +153,12 @@ class GameFrame extends JFrame {
 	private static final int FIELD_H_SIZE = 50;
 	private static final int SCORE_UP_SPACE = 100;
 
-	void drawScoreTable(Graphics2D g2) {
+	/** Piirtää pistetilaston.
+	 * @param g grafiikkaolio, jonka kautta piirto tehdään
+	 */
+	void drawScoreTable(Graphics g) {
+		Graphics2D g2 = (Graphics2D)g;
+
 		g2.setColor(Color.black);
 		int w=getWidth(), h=getHeight();
 		g2.fillRect(0,0,w,h);

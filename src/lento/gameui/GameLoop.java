@@ -6,6 +6,10 @@ import java.io.*;
 import java.awt.*;
 import java.net.*;
 
+/**
+ * GameLoop huolehtii pelin aikana verkon, fysiikan ja paikallisen piirron ja
+ * syötteenluvun välisestä kommunikaatiosta.
+ */
 public class GameLoop {
 
 	private GamePhysics physics;
@@ -17,6 +21,13 @@ public class GameLoop {
 	private static final int MAX_FPS = 80;
 	private static final long FRAME_TIME = (long)1e9 / MAX_FPS;
 
+	/** Luo uuden pelin yhdistämättä keneenkään muuhun.
+	 * @param file tiedosto, josta pelialueen tiedot luetaan
+	 * @param name paikallisen pelaajan nimi
+	 * @param color paikallisen pelaajan väri
+	 *
+	 * @throws IOException jos tiedoston luku tai verkon alustus epäonnistuu
+	 */
 	public GameLoop(File file, String name, Color color) throws IOException {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics(file);
@@ -24,6 +35,14 @@ public class GameLoop {
 		physics.addPlayer(localPlayer);
 		physics.setObserver(net);
 	}
+	/** Pyrkii liittymään käynnissä olevaan peliin.
+	 * @param addr verkko-osoite, johon yhdistetään
+	 * @param port portti, johon yhdistetään
+	 * @param name paikallisen pelaajan nimi
+	 * @param color paikallisen pelaajan väri
+	 *
+	 * @throws IOException jos yhdistäminen epäonnistuu
+	 */
 	public GameLoop(InetAddress addr, int port, String name, Color color) throws IOException {
 		localPlayer = new LocalPlayer(this, name, color);
 		physics = new GamePhysics();
@@ -36,6 +55,9 @@ public class GameLoop {
 		physics.setObserver(net);
 	}
 
+	/** Suorittaa pelin pääsilmukan.
+	 * Metodista palaudutaan vasta, kun paikallinen pelaaja poistuu pelistä.
+	 */
 	public void start() throws IOException {
 		System.out.println("creating game frame");
 		frame = new GameFrame(physics, localPlayer);
@@ -98,7 +120,9 @@ public class GameLoop {
 			nextTime += FRAME_TIME;
 //			if (false) throw new InterruptedException();
 		}
-		}catch(InterruptedException e){}
+		}catch(InterruptedException e){
+			// FIXME: tee jotain?
+		}
 
 		net.cleanUp();
 

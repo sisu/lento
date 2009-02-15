@@ -1,4 +1,4 @@
 /**
- * Sisältää verkossa tapahtuvaan kommunikointiin liittyvät luokat.
+ * Verkossa tapahtuvaan kommunikointiin liittyvät luokat.
  */
 package lento.net;

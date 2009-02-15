@@ -366,7 +366,7 @@ class NetPlayer extends Player implements Runnable {
 		spawn(new Point2D.Float(x,y));
 	}
 	/** Käsittelee etäpelaajalta tulleen PLAYER_SHOOT-viestin.
-	 * Luo paketissa määritellyt ammukset listener.addRemoteBullet-metodilla.
+	 * Metodi lisää paketissa tulleet ammukset GamePhysics-oliolle.
 	 * @param istream syötevirta, josta paketin sisältö voidaan lukea
 	 */
 	private void readBullets(ByteArrayInputStream istream) throws IOException {
@@ -382,7 +382,7 @@ class NetPlayer extends Player implements Runnable {
 			vx=in.readFloat();
 			vy=in.readFloat();
 			Bullet b = new Bullet(x,y,vx,vy,id,bulletID++);
-			listener.addRemoteBullet(b);
+			listener.physics.addBullet(b);
 		}
 	}
 	/** Käsittelee etäpelaajalta tulleen PLAYER_HIT-viestin.
@@ -398,9 +398,7 @@ class NetPlayer extends Player implements Runnable {
 		for(int i=0; i<count; ++i) {
 			int shooter = in.readUnsignedByte();
 			int bulletID = in.readUnsignedShort();
-			if (shooter==id)
-				shooter = -1;
-			listener.addRemoteHit(shooter,bulletID);
+			listener.addRemoteHit(shooter,bulletID,shooter==id);
 		}
 	}
 };

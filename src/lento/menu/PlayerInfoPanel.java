@@ -4,6 +4,9 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.awt.*;
 
+/**
+ * Paneeli, josta saa valita pelaajan nimen ja värin.
+ */
 class PlayerInfoPanel extends JPanel implements ActionListener {
 
 	JTextField nameField;
@@ -17,6 +20,8 @@ class PlayerInfoPanel extends JPanel implements ActionListener {
 
 	JPanel colorViewPanel;
 
+	/** Luo paneelin.
+	 */
 	PlayerInfoPanel() {
 		setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
 		add(new JLabel("Pelaajanimi"));
@@ -38,6 +43,10 @@ class PlayerInfoPanel extends JPanel implements ActionListener {
 		add(colorPanel);
 	}
 
+	/** Huolehtii tapauksesta, jossa käyttäjä painaa värinvalintanappia.
+	 * Avaa värinvalintaikkunan ja päivittää valitun värin.
+	 * @param e tieto napista, jota käyttäjä painoi
+	 */
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("color")) {
 			Color newColor = JColorChooser.showDialog(this, "Valitse aluksen väri", color);

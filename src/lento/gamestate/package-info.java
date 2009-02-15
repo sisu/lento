@@ -1,4 +1,4 @@
 /** 
- * Sisältää pelin fysiikasta huolehtivat luokat.
+ * Pelin fysiikasta huolehtivat luokat.
  */
 package lento.gamestate;
