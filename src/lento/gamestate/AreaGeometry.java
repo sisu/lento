@@ -42,6 +42,7 @@ public class AreaGeometry {
 			if (crosspf(a.x,a.y,b.x,b.y,c.x,c.y)*crosspf(a.x,a.y,b.x,b.y,d.x,d.y) <= 0
 				&& crosspf(c.x,c.y,d.x,d.y,a.x,a.y)*crosspf(c.x,c.y,d.x,d.y,b.x,b.y) <= 0)
 			{
+				// Törmäys tapahtui, määritetään sen paikka
 	//			System.out.println("hit");
 				float dax=b.x-a.x;
 				float day=b.y-a.y;
@@ -51,20 +52,32 @@ public class AreaGeometry {
 				float p = a.x*b.y-a.y*b.x;
 				float q = c.x*d.y-c.y*d.x;
 				Point2D.Float intersection = new Point2D.Float(-(p*dbx-q*dax)/n, -(p*dby-q*day)/n);
-				if (res==null || a.distanceSq(intersection) < a.distanceSq(res.location))
+				if (res==null || a.distanceSq(intersection) < a.distanceSq(res.getLoc()))
 					res = new Collision(intersection, e.normal);
 			}
 		}
 		return res;
 	}
-	private static float dist2(Point2D.Float a, Point2D.Float b) {
-		float dx=b.x-a.x;
-		float dy=b.y-a.y;
-		return dx*dx+dy*dy;
-	}
 
+	/**
+	 * Sisältää tiedon yhdestä monikulmion särmästä.
+	 */
 	private class Edge {
-		Point2D.Float start,end,normal;
+		/** Alkupiste */
+		Point2D.Float start;
+		/** Loppupiste */
+		Point2D.Float end;
+		/** Normaalivektori */
+		Point2D.Float normal;
+
+		/** Luo uuden särmän.
+		 * @param x1 alkupisteen x-koordinaatti
+		 * @param y1 alkupisteen y-koordinaatti
+		 * @param x2 loppupisteen x-koordinaatti
+		 * @param y2 loppupisteen y-koordinaatti
+		 * @param nx normaalivektorin x-koordinaatti
+		 * @param ny normaalivektorin y-koordinaatti
+		 */
 		Edge(float x1, float y1, float x2, float y2, float nx, float ny) {
 			start = new Point2D.Float(x1,y1);
 			end = new Point2D.Float(x2,y2);
@@ -73,6 +86,9 @@ public class AreaGeometry {
 		}
 	}
 
+	/** Lukee pelialueen tiedot tiedostosta.
+	 * @param file tiedosto, josta pelialueen tiedot luetaan.
+	 */
 	private void readFile(File file) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
 		String line;
@@ -112,24 +128,31 @@ public class AreaGeometry {
 				}
 			}
 			// Lisää kentän reunat särmiin
-/*			addEdge(0,0,sizeW,0,1);
-			addEdge(sizeW,0,sizeW,sizeH,1);
-			addEdge(sizeW,sizeH,0,sizeH,1);
-			addEdge(0,sizeH,0,0,1);
-*/			addEdge(-1,0,sizeW+1,0,1);
-			addEdge(sizeW,-1,sizeW,sizeH+1,1);
-			addEdge(sizeW+1,sizeH,-1,sizeH,1);
-			addEdge(0,sizeH+1,0,-1,1);
+			setSize(sizeW,sizeH);
 		} catch(NumberFormatException e) {
 			readError(file,lineCount,"Virheellinen numeroformaatti.");
 		}
 	}
+	/** Heittää poikkeuksen, joka kertoo kenttätiedoston luvussa tapahtuneesta virheestä.
+	 * @param file tiedosto, jota oltiin lukemassa
+	 * @param line tiedoston rivi, jolla virhe tapahtui
+	 * @param msg lisätietoa virheestä
+	 */
 	private void readError(File file, int line, String msg) throws IOException {
 		throw new IOException("Tiedoton "+file.getAbsolutePath()+" luku epäonnistui rivillä "+line+": "+msg);
 	}
+
+	/** Palauttaa pelialueen polygonit. Tämä ei sisällä kentän reunoja.
+	 * @return taulukko kentän polygoneista.
+	 */
 	public ArrayList<ColoredPolygon> getPolygons() {
 		return polygons;
 	}
+
+	/** Generoi satunnaisen syntymispaikan pelaajalle.
+	 * Generoitu paikka ei ole minkään polygonin sisällä.
+	 * @return satunnainen tyhjä paikka pelialueen sisällä
+	 */
 	public Point2D.Float getSpawnPoint() {
 		float x,y;
 		boolean ok;
@@ -147,6 +170,10 @@ public class AreaGeometry {
 		} while(!ok);
 		return new Point2D.Float(x,y);
 	}
+
+	/** Määrittää polygonin särmät ja lisää ne särmälistaan.
+	 * @param p polygoni, jonka särmät määritetään
+	 */
 	private void addEdges(Polygon p) {
 		// Testaa, ovatko kärkipisteet listattu myötä- vai vastapäivään
 		long area=0;
@@ -159,38 +186,53 @@ public class AreaGeometry {
 			addEdge(p.xpoints[i-1],p.ypoints[i-1],p.xpoints[i],p.ypoints[i], direction);
 		addEdge(p.xpoints[p.npoints-1],p.ypoints[p.npoints-1],p.xpoints[0],p.ypoints[0], direction);
 	}
+
+	/** Lisää yhden särmän särmälistaan.
+	 * @param x1 alkupisteen x-koordinaatti
+	 * @param y1 alkupisteen y-koordinaatti
+	 * @param x2 loppupisteen x-koordinaatti
+	 * @param y2 loppupisteen y-koordinaatti
+	 * @param direction -1 tai 1 riippuen siitä kumpaan suuntaan pinnan normaali on suuntaunut
+	 */
 	private void addEdge(int x1, int y1, int x2, int y2, int direction) {
 		int nx = (y1-y2)*direction;
 		int ny = (x2-x1)*direction;
 		System.out.printf("adding edge: %d %d - %d %d ; %d %d\n", x1,y1,x2,y2,nx,ny);
 		edges.add(new Edge(x1,y1,x2,y2,nx,ny));
 	}
-	private static long crossp(long x0, long y0, long x1, long y1, long x2, long y2) {
-		x1-=x0; y1-=y0;
-		x2-=x0; y2-=y0;
-		return x1*y2-x2*y1;
-	}
-	private static float crosspf(float x0, float y0, float x1, float y1, float x2, float y2) {
-		x1-=x0; y1-=y0;
-		x2-=x0; y2-=y0;
-		return x1*y2-x2*y1;
-	}
 
+	/** Palauttaa pelialueen leveyden.
+	 * @return pelialueen leveys.
+	 */
 	public int getWidth() {
 		return sizeW;
 	}
+	/** Palauttaa pelialueen korkeuden.
+	 * @return pelialueen korkeus.
+	 */
 	public int getHeight() {
 		return sizeH;
 	}
+	/** Palauttaa pelialueen reunojen värin.
+	 * @return reunojen väri
+	 */
 	public Color getBorderColor() {
 		return borderColor;
 	}
 
+	/** Poistaa kentällä olevat esteet ja asettaa uuden koon kentälle.
+	 * @param w kentän uusi leveys
+	 * @param h kentän uusi korkeus
+	 */
 	public void resetArea(int w, int h) {
 		edges.clear();
 		polygons.clear();
 		setSize(w,h);
 	}
+	/** Asettaa pelialueen koon ja luo reunojen särmät.
+	 * @param w kentän leveys
+	 * @param h kentän korkeus
+	 */
 	private void setSize(int w, int h) {
 		sizeW = w;
 		sizeH = h;
@@ -199,11 +241,44 @@ public class AreaGeometry {
 		addEdge(w,h,0,h,1);
 		addEdge(0,h,0,0,1);
 	}
+	/** Asettaa reunojen värin.
+	 * @param c uusi reunaväri
+	 */
 	public void setBorderColor(Color c) {
 		borderColor = c;
 	}
+	/** Lisää polygonin alueen esteisiin.
+	 * @param poly lisättävä polygoni
+	 */
 	public void addPolygon(ColoredPolygon poly) {
 		polygons.add(poly);
 		addEdges(poly);
+	}
+
+	/** Laskee ristitulon suuruuden kaksiulotteisille kokonaislukuvektoreille.
+	 * @param x0 origin x-koordinaatti
+	 * @param y0 origin y-koordinaatti
+	 * @param x1 1. vektorin x-koordinaatti
+	 * @param y1 1. vektorin y-koordinaatti
+	 * @param x2 2. vektorin x-koordinaatti
+	 * @param y2 2. vektorin y-koordinaatti
+	 */
+	private static long crossp(long x0, long y0, long x1, long y1, long x2, long y2) {
+		x1-=x0; y1-=y0;
+		x2-=x0; y2-=y0;
+		return x1*y2-x2*y1;
+	}
+	/** Laskee ristitulon suuruuden kaksiulotteisille liukulukuvektoreille.
+	 * @param x0 origin x-koordinaatti
+	 * @param y0 origin y-koordinaatti
+	 * @param x1 1. vektorin x-koordinaatti
+	 * @param y1 1. vektorin y-koordinaatti
+	 * @param x2 2. vektorin x-koordinaatti
+	 * @param y2 2. vektorin y-koordinaatti
+	 */
+	private static float crosspf(float x0, float y0, float x1, float y1, float x2, float y2) {
+		x1-=x0; y1-=y0;
+		x2-=x0; y2-=y0;
+		return x1*y2-x2*y1;
 	}
 }

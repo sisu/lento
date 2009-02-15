@@ -8,12 +8,12 @@ import java.awt.geom.*;
  */
 class Collision {
 	/** Paikka, jossa törmäys tapahtui. */
-	public Point2D.Float location;
+	private Point2D.Float location;
 
 	/** Pinnan, johon törmättiin, normaalivektori.
 	 * Tämä on aina yksikkövektori.
 	 */
-	public Point2D.Float normal;
+	private Point2D.Float normal;
 
 	/** Luo tiedon uudesta törmäyksestä.
 	 * @param loc törmäyspaikka
@@ -22,5 +22,18 @@ class Collision {
 	Collision(Point2D.Float loc, Point2D.Float norm) {
 		location = loc;
 		normal = norm;
+	}
+
+	/** Palauttaa törmäyspaikan.
+	 * @return paikka, jossa törmäys tapahtui
+	 */
+	Point2D.Float getLoc() {
+		return location;
+	}
+	/** Palauttaa törmäyspinnan normaalin.
+	 * @return pinnan, johon törmättiin, normaalivektori
+	 */
+	Point2D.Float getNormal() {
+		return normal;
 	}
 }

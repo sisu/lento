@@ -94,8 +94,8 @@ public class GamePhysics {
 
 	private void handleReflection(Player pl, Collision coll) {
 		Point2D.Float speed = pl.speedVec;
-		Point2D.Float normal = coll.normal;
-		Point2D.Float loc = coll.location;
+		Point2D.Float normal = coll.getNormal();
+		Point2D.Float loc = coll.getLoc();
 		float dot = normal.x*speed.x + normal.y*speed.y;
 		if (dot>=0) {
 			System.out.println("phale");
