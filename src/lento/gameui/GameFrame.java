@@ -14,16 +14,27 @@ import java.util.*;
  */
 class GameFrame extends JFrame {
 
+	/** Aluksen piirtämiseen käytetty polygoni. */
 	private static final Polygon craftPolygon = new Polygon(new int[]{-10,0,10,0}, new int[]{-10,5,-10,10}, 4);
-	private static final int BORDER_SIZE = 25;
-	private static final int BAR_W_GAP = 20;
-	private static final int BAR_HEIGHT = 10;
-	private static final int BAR_H_GAP = 3;
 
+	/** Alueen reunuksen koko pikseleinä */
+	private static final int BORDER_SIZE = 25;
+	/** Energiapalkkien etäisyys ruudun reunoista vaakasuunnassa */
+	private static final int BAR_W_GAP = 20;
+	/** Energiapalkkien väliin jäävä tila pystysuunnassa */
+	private static final int BAR_H_GAP = 3;
+	/** Energiapalkkien korkeus */
+	private static final int BAR_HEIGHT = 10;
+
+	/** Pelin fysiikasta huolehtiva olio */
 	private GamePhysics physics;
+	/** Paikallista pelaajaa vastaava olio */
 	private LocalPlayer localPlayer;
 
+	/** Tosi, joss ollaan pistenäytössä */
 	boolean scoreViewMode = false;
+
+	/** Montako framea ollaan piirretty tämän sekunnin aikana. */
 	int frameCount=0;
 
 	/** Luo GameFrame-olion ja avaa uuden ikkunan piirtoa varten.
@@ -58,6 +69,7 @@ class GameFrame extends JFrame {
 				drawScoreTable(g);
 			else
 				paint(g);
+			++frameCount;
 		} finally {
 			g.dispose();
 		}
@@ -140,17 +152,21 @@ class GameFrame extends JFrame {
 		g2.setColor(Color.yellow);
 		int energyBarSize = (int)(maxBarSize * localPlayer.shootEnergy/LocalPlayer.MAX_SHOOT_ENERGY);
 		g2.fill(new Rectangle(BAR_W_GAP, h-2*(BAR_HEIGHT+BAR_H_GAP), energyBarSize, BAR_HEIGHT));
-
-		++frameCount;
 	}
 
 	// Pistenäytön piirtoon liittyvät vakiot
 
+	/** Pistenäytön arvojen nimet */
 	private static final String[] titles = new String[]{"nimi","tapot","kuolemat","osumat","osuttu"};
+	/** Nimen vasemmalle puolelle jätettävä tila pistenäytössä */
 	private static final int NAME_LEFT_SPACE = 20;
+	/** Nimikentän koko pikseleinä pistenäytössä */
 	private static final int NAME_FIELD_SIZE = 150;
+	/** Muiden kenttien koko pikseleinä pistenäytössä */
 	private static final int FIELD_W_SIZE = 100;
+	/** Rivin korkeus pistenäytössä */
 	private static final int FIELD_H_SIZE = 50;
+	/** Paljonko tilaa jätetään kaikkien rivien yläpuolelle pistenäytössä */
 	private static final int SCORE_UP_SPACE = 100;
 
 	/** Piirtää pistetilaston.

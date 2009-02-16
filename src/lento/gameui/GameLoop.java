@@ -12,13 +12,21 @@ import java.net.*;
  */
 public class GameLoop {
 
+	/** Pelin fysiikasta huolehtiva olio */
 	private GamePhysics physics;
+	/** Paikallisesta pelaajasta huolehtiva olio */
 	private LocalPlayer localPlayer;
+	/** Verkossa kommunikoinnista huolehtiva olio */
 	private NetListener net;
+	/** Piirtoikkuna */
 	GameFrame frame;
+
+	/** Tosi, joss paikallinen pelaaja haluaa poistua pelistä. */
 	boolean done=false;
 
+	/** Maksimaalinen ruudunpäivitysnopeus */
 	private static final int MAX_FPS = 80;
+	/** Yhteen frameen minimissään käytettävä aika nanosekunteina. */
 	private static final long FRAME_TIME = (long)1e9 / MAX_FPS;
 
 	/** Luo uuden pelin yhdistämättä keneenkään muuhun.

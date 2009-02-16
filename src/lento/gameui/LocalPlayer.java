@@ -10,17 +10,28 @@ import java.awt.geom.*;
  */
 class LocalPlayer extends Player implements KeyListener {
 
+	/** Aika, joka on kuluttava pelaajan kuoleman ja uudelleensyntymän
+	 * välillä nanosekunteina. */
 	static final long SPAWN_TIME = (long)1e9;
+	/** Pelaajan ampumisenergian maksimimäärä */
 	static final float MAX_SHOOT_ENERGY = 100;
+	/** Kuinka nopeasti ampumisenergiat palautuvat (yksikköä/s) */
 	static final float SHOOT_ENERGY_RECOVER_RATE = 20;
+	/** Paljonko yhden ammuksen ampuminen kuluttaa ampumisenergiaa */
 	static final float SHOOT_ENERGY_USE = 5;
 
+	/** Pelin päivityksestä huolehtiva pääsilmukka */
 	private GameLoop gameLoop;
 
+	/** Tosi, joss pelaaja painaa ampumisnappia. */
 	boolean shooting=false;
+	/** Ajanhetki, jolloin pelaaja saa herätä seuraavan kerran henkiin. */
 	long spawnTime = 0;
+	/** Ajanhetki, jolloin pelaaja saa ampua seuraavan kerran. */
 	long nextShootTime=0;
+	/** ID-numero, joka annetaan seuraavalle ammuttavalle ammukselle. */
 	int nextBulletID=0;
+	/** Pelaajan jäljellä oleva ampumisenergia. */
 	float shootEnergy;
 
 	/** Luo olion paikalliselle pelaajalle.
