@@ -9,6 +9,7 @@ import java.awt.*;
  */
 class PlayerInfoPanel extends JPanel implements ActionListener {
 
+	/** Tekstikenttä pelaajanimen lukemiseen. */
 	JTextField nameField;
 
 	/**
@@ -18,6 +19,7 @@ class PlayerInfoPanel extends JPanel implements ActionListener {
 	 */
 	Color color=Color.getHSBColor((float)Math.random(), 1, 1);
 
+	/** Tyhjä paneeli, joka näyttää nykyisen aluksen värivalinnan. */
 	JPanel colorViewPanel;
 
 	/** Luo paneelin.

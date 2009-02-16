@@ -8,7 +8,10 @@ import java.awt.event.*;
  */
 class JoinPanel extends JPanel {
 
-	JTextField hostField, portField;
+	/** Tekstikenttä verkko-osoitteen lukua varten */
+	JTextField hostField;
+	/** Tekstikenttä porttinumeron lukua varten */
+	JTextField portField;
 
 	/** Luo paneelin.
 	 * @param listener olio, joka huolehtii napinpainallusten aiheuttamista tapahtumista

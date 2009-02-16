@@ -13,9 +13,14 @@ import java.net.*;
  */
 public class MenuFrame extends JFrame implements ActionListener {
 
+	/** Paneeli omien pelaajatietojen syöttämistä varten. */
 	private PlayerInfoPanel playerInfo;
+	/** Paneeli uuden pelin luomista varten. */
 	private HostPanel host;
+	/** Paneeli peliin liittymistä varten. */
 	private JoinPanel join;
+	/** Pelisilmukka, joka luodaan käyttäjän valittua pelin luonti tai peliin
+	 * liittyminen paneeleista. */
 	private GameLoop loop;
 
 	/** Luo valikkoikkunan ja siihen kuuluvat paneelit.
@@ -58,6 +63,8 @@ public class MenuFrame extends JFrame implements ActionListener {
 				loop = new GameLoop(addr,port,name,color);
 			}
 			if (loop!=null) {
+				// Java odottaa, että tästä metodista palataan ennen uusien
+				// tapahtumien käsittelyä, joten avataan peli uuteen säikeeseen.
 				new Thread(new Runnable() {
 					public void run() {
 						setVisible(false);
@@ -71,6 +78,7 @@ public class MenuFrame extends JFrame implements ActionListener {
 				}).start();
 			}
 		} catch(Exception e) {
+			// FIXME: näytä joku ruma dialogi
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}

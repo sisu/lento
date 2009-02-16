@@ -8,6 +8,7 @@ import java.awt.event.*;
  */
 class HostPanel extends JPanel implements ActionListener {
 
+	/** Tekstikenttä tiedostonimen lukua ja näyttämistä varten */
 	JTextField filename;
 
 	/** Luo paneelin.
