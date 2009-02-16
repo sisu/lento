@@ -15,11 +15,16 @@ import java.util.*;
  */
 class NetPlayer extends Player implements Runnable {
 
+	/** Etäpelaajaan auki oleva TCP-yhteys */
 	Socket socket;
+	/** Pelin etäpelaajista huolehtivat NetListener-olio */
 	NetListener listener;
-	volatile boolean done=false;
+	/** Etäkoneen käyttämä UDP-portti */
 	int udpPort=0;
+	/** Etäkoneen käyttämä TCP-portti */
 	int tcpPort=0;
+	/** Tieto siitä, odotetaanko tältä pelaajalta hyväksyntää paikallisen
+	 * pelaajan peliin liittymiselle. */
 	boolean waitingJoinOK = false;
 
 	/** Luo olion uudelle etäpelaajalle.
@@ -41,7 +46,7 @@ class NetPlayer extends Player implements Runnable {
 		DataInputStream in=null;
 		try {
 			in = new DataInputStream(socket.getInputStream());
-			while(socket.isConnected() && !done) {
+			while(socket.isConnected()) {
 				System.out.println("Waiting for next packet...");
 				int packetType = in.read();
 				if (packetType == -1) break;

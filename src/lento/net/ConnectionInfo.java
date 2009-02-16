@@ -5,9 +5,15 @@ import java.net.*;
 /**
  * ConnectionInfo-luokka pitää kirjaa yhden UDP-yhteyden osoitteesta ja
  * portista.
+ * Luokka toteuttaa hashCode- ja equals-metodit, joten sitä voidaan käyttää
+ * hajautustaulussa hakemaan tehokkaasti pelaajatieto paketin verkko-osoitteen
+ * perusteella.
  */
 class ConnectionInfo {
+
+	/** Yhteyden etäkoneen verkko-osoite */
 	InetAddress address;
+	/** Etäkoneen käyttämä portti */
 	int port;
 
 	/** Muodosta olio osoitteen ja portin perusteella.

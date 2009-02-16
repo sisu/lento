@@ -18,6 +18,8 @@ import java.awt.geom.*;
  */
 public class NetListener implements Runnable, PhysicsObserver {
 
+	/** Paikallinen TCP-portti, jota yritetään ensisijaisesti käyttää.
+	 * Jos tämä on varattu, yritetään tätä seuraavia porttinumeroita. */
 	static public final int DEFAULT_TCP_PORT = 53256;
 
 	static final int TCP_GET_AREA_INFO = 0x01;
@@ -33,23 +35,45 @@ public class NetListener implements Runnable, PhysicsObserver {
 	static final int UDP_PLAYER_SHOOT = 0x11;
 	static final int UDP_PLAYER_HIT = 0x12;
 
-	static final int IN_BUFFER_SIZE = 65536;
-	static final int OUT_BUFFER_SIZE = 65536;
-
+	/** Nykyisen pelin fysiikasta huolehtiva olio */
 	GamePhysics physics;
+	/** Taulukko kaikista yhdistäneistä etäpelaajista.
+	 * Tähän taulukkoon on kirjattu myös ne yhdistäneet pelaajat, jotka eivät vielä
+	 * ole lähettäneet peliinliittymispyyntöä.
+	 * Peliin kuulumattomat pelaajat tunnistetaan siitä, että niiden ID-numero on -1.
+	 */
 	ArrayList<NetPlayer> players = new ArrayList<NetPlayer>();
+	/** Palvelin-socket, joka ottaa vastaan uusia TCP-yhteyksiä. */
 	ServerSocket tcpSocket;
+	/** UDP-socket, jonka kautta kaikki tämän asiakasohjelman UDP-liikenne kulkeen. */
 	DatagramSocket udpSocket = new DatagramSocket();
+	/** Paikallista pelaajaa vastaava Player-olio. */
 	Player localPlayer;
+
+	/** Hajautustaulu, jonka avulla haetaan UDP-paketin saapuessa paketin
+	 * lähettää vastaava NetPlayer-olio.
+	 */
 	HashMap<ConnectionInfo,NetPlayer> playerTable = new HashMap<ConnectionInfo,NetPlayer>();
 
+	/** Paikallisen pelaajan tällä framella ampumat ammukset.
+	 * Näistä pidetään kirjaa muille pelaajille lähettämistä varten. */
 	ArrayList<Bullet> localShoots = new ArrayList<Bullet>();
+	/** Paikalliseen pelaajaan tällä framella osuneet ammukset.
+	 * Näistä pidetään kirjaa muille pelaajille lähettämistä varten. */
 	ArrayList<Bullet> localHits = new ArrayList<Bullet>();
 
-	private PacketOutputStream outBuffer = new PacketOutputStream(OUT_BUFFER_SIZE);
+	/** Kirjoituspuskuri, johon kirjoitetaan TCP- tai UDP-viesti ennen sen
+	 * lähettämistä etäpelaajille. */
+	private PacketOutputStream outBuffer = new PacketOutputStream(1<<16);
 
+	// FIXME: jos joku ei hyväksykään?
+	/** Tieto, monenko pelaajan hyväksyntää paikallisen pelaajan peliin
+	 * liittymiselle vielä odotetaan. */
 	private int waitCount=0;
 
+	// FIXME: hajoamiset?
+	/** Tosi, joss paikallinen pelaaja on lopettanut pelin, ja kaikki yhteydet
+	 * voidaan katkaista. */
 	boolean done=false;
 
 	/** Luo uuden NetPlayer-olion.
@@ -121,7 +145,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 */
 	private void listenUDP() {
 		try {
-			byte[] buf = new byte[IN_BUFFER_SIZE];
+			byte[] buf = new byte[1<<16];
 			DatagramPacket p = new DatagramPacket(buf, buf.length);
 			while(!done) {
 				udpSocket.receive(p);
@@ -256,7 +280,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 		udpSocket.close();
 		for(Iterator<NetPlayer> i=players.iterator(); i.hasNext(); ) {
 			NetPlayer pl = i.next();
-			pl.done = true;
 			pl.socket.close();
 		}
 	}
@@ -328,7 +351,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	void sendTCPPacket(byte[] buf, int length) throws IOException {
 		for(NetPlayer pl : players) {
 			if (pl.getID()<0) continue;
-			System.out.printf("sending %d(%d) to %s : %d\n", buf[0], length, pl.socket.getInetAddress().toString(), pl.socket.getPort());
+//			System.out.printf("sending %d(%d) to %s : %d\n", buf[0], length, pl.socket.getInetAddress().toString(), pl.socket.getPort());
 			OutputStream out = pl.socket.getOutputStream();
 			out.write(buf, 0, length);
 			out.flush();
