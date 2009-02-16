@@ -1,0 +1,42 @@
+!!! Käyttöohje
+
+!! Ohjelman esittely
+
+Lento on verkossa pelattava luolalentelypeli, jossa tarkoituksena on ohjata lentävää alusta 2-ulotteisessa tilassa ja ampua muita pelaajia ja väistellä heidän ammuksiaan.
+
+!! Ajo-ohje
+
+Ohjelma käynnistetään <TODO: jar-paketti???>.
+Uuden pelin luomiseen tarvitset kenttätiedoston, joka määrittää pelialueen koon ja esteet. Kenttätiedostot ovat tekstimuotoisia, joten voit muokata ja luoda niitä tavallisella tekstieditorilla, ks. liite <TODO>.
+Jos liityt käynnissä olevaan peliin, et tarvitse itse ohjelman lisäksi muita tiedostoja, mutta sinun on tiedettävä jonkun pelissä olijan koneen IP-osoite tai domain-nimi sekä porttinumero. Peli käyttää oletuksena porttia <TODO>.
+
+!! Laitteistovaatimukset
+
+Java-1.6
+TODO: jotain tähän?
+
+!! Ohjelman toiminnot
+
+! Alkuvalikon toiminnot
+
+! Toiminnot pelitilassa
+
+vasen nuoli | Käännä alusta vastapäivään
+oikea nuoli | Käännä alusta myötäpäivään
+ylänuoli    | Kiihdytä alusta
+space       | Ammu
+ESC         | Palaa alkuvalikkoon
+alt-F4      | Sulje peli
+tab         | Näytä pistetilastot
+
+!! Ohjelman rajoitukset
+
+Maksimimäärä pelaajia yhdessä pelissä: 127.
+Maksimimäärä ammuksia ilmassa: 65535.
+Pelialueen korkeus ja leveys: 106 pikseliä.
+Pelaajan nimi saa olla korkeintaan 32 merkkiä pitkä.
+Kaikki alueen esteet saavat yhteensä koostua maksimissaan 65535 verteksistä.
+
+!! Virheilmoitukset
+
+TODO
