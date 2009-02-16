@@ -10,10 +10,18 @@ import java.io.*;
  */
 public class AreaGeometry {
 
+	/** Taulukko kaikista alueen polygoneista. */
 	private ArrayList<ColoredPolygon> polygons = new ArrayList<ColoredPolygon>();
+	/** Taulukko polygonien ja alueen reunojen määräämistä särmistä.
+	 * Käytetään törmäystarkastuksessa.
+	 */
 	private ArrayList<Edge> edges = new ArrayList<Edge>();
-	private int sizeW=0,sizeH=0;
-	Color borderColor=null;
+	/** Alueen leveys */
+	private int sizeW=0;
+	/** Alueen korkeus */
+	private int sizeH=0;
+	/** Alueen reunojen väri */
+	private Color borderColor=null;
 
 	/** Luo pelialueen lukemalla sen tiedot tiedostosta.
 	 * @param file tiedosto, josta tiedot luetaan.
@@ -52,6 +60,8 @@ public class AreaGeometry {
 				float p = a.x*b.y-a.y*b.x;
 				float q = c.x*d.y-c.y*d.x;
 				Point2D.Float intersection = new Point2D.Float(-(p*dbx-q*dax)/n, -(p*dby-q*day)/n);
+
+				// Tarkistetaan, onko törmäys lähin löydetty
 				if (res==null || a.distanceSq(intersection) < a.distanceSq(res.getLoc()))
 					res = new Collision(intersection, e.normal);
 			}

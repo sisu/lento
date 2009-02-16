@@ -8,27 +8,45 @@ import java.awt.geom.*;
  */
 public class Player {
 
+	/** Aluksen peruskiihtyvyys (pix/s^2) */
 	private static final float ACCEL_SPEED = 800.0f;
+	/** Aluksen maksiminopeus (pix/s) */
 	private static final float MAX_SPEED = 700;
+	/** Aluksen kääntymisnopeus, radiaania sekunnissa */
 	private static final float TURN_SPEED = 5.0f;
+	/** Pelaajan energiat syntymishetkellä */
 	public static final int INITIAL_HEALTH = 1000;
 
+	/** Pelaajan nimi */
 	protected String name="";
+	/** Pelaajasta ylläpidetyt tilastotiedot */
 	protected int kills=0, deaths=0, damageDone=0, damageTaken=0;
+	/** Aluksen väri */
 	protected Color color;
+	/** Pelaajan ID-numero */
 	protected int id=-1;
 
+	/** Pelaajan sijainti */
 	protected Point2D.Float location=new Point2D.Float(0,0);
-	protected Point2D.Float speedVec=new Point2D.Float(0,0);
+	/** Pelaajan edellinen sijainti; käytetään törmäystarkistuksessa. */
 	protected Point2D.Float prevLocation=new Point2D.Float(0,0);
+	/** Pelaajan nopeusvektori */
+	protected Point2D.Float speedVec=new Point2D.Float(0,0);
+	/** Kulma, johon alus on kääntynyt radiaaneina. */
 	protected float angle;
 
+	/** Tosi, joss pelaaja kiihdyttää. */
 	protected boolean accelerating = false;
+	/** -1, 1 tai 0 riippuen kääntyykö pelaaja myötäpäivään,
+	 * vastapäivään vai ei ollenkaan. */
 	protected int turning = 0;
 
+	/** Tosi, joss pelaaja on hengissä. */
 	protected boolean alive = false;
+	/** Pelaajan jäljellä olevat osumapisteet. */
 	int health;
 
+	// FIXME: siirrä GamePhysics-luokkaan?
 	/** Taulukko siitä, missä indeksissä mikäkin tämän pelaajan ampuma 
 	 * ammus sijaitsee GamePhysics-olion taulukossa.
 	 */
@@ -51,7 +69,10 @@ public class Player {
 
 		if (turning!=0) {
 			angle += turning*time*TURN_SPEED;
-			angle = (float)fmod(angle, 2*Math.PI);
+
+			// Huolehdi, että kulma on väliltä 0-2pi
+			float pi2 = (float)(2*Math.PI);
+			angle -= pi2*Math.floor(angle/pi2);
 		}
 
 		if (accelerating) {
@@ -64,9 +85,6 @@ public class Player {
 		}
 		location.x += .5f*(prevVX+speedVec.x)*time;
 		location.y += .5f*(prevVY+speedVec.y)*time;
-	}
-	private static double fmod(double a, double b) {
-		return a-b*Math.floor(a/b);
 	}
 
 	/** Palauttaa pelaajan nykyisen sijainnin.

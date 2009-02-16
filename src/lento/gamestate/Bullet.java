@@ -6,9 +6,15 @@ import java.awt.geom.*;
  * Sisältää tiedot yhdestä ilmassa olevasta ammuksesta.
  */
 public class Bullet {
+
+	/** Ammuksen sijainti */
 	Point2D.Float location;
+	/** Ammuksen nopeusvektori */
 	Point2D.Float speedVec;
+
+	/** Ampujan pelaaja-ID */
 	short shooter;
+	/** Ammuksen ID */
 	short id;
 
 	/** Päivittää ammuksen sijainnin ja nopeusvektorin.

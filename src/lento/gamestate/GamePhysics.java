@@ -9,26 +9,50 @@ import java.io.*;
  */
 public class GamePhysics {
 
+	/** Gravitaatiovoiman aiheuttama kiihtyvyys (pix/s^2) */
 	static final float GRAVITY = 50.0f;
+	/** Moninkokertaiseksi aluksen nopeus muuttuu seinään törmätessä */
 	static final float SLOWDOWN_FACTOR = .8f;
+	/** Etäisyys, jonka saavutettuaan ammus osuu pelaajaan. */
 	static final float BULLET_HIT_RANGE = 8.f;
-	static final float BULLET_HIT_RANGE_SQ = BULLET_HIT_RANGE*BULLET_HIT_RANGE;
+	/** Ammuksen lähtönopeus */
 	static final float BULLET_SPEED = 400.f;
+	/** Aika, joka on odotettava kahden ammuksen ampumisen välillä nanosekunteina. */
 	public static final long SHOOT_INTERVAL = (long)1e8;
+	/** Yhden ammuksen osumisesta aiheutuva vahinkomäärä pelaajalle. */
 	public static final int BULLET_DAMAGE = 100;
+	/** Paljonko pelaaja vahingoittuu seinään törmätessään.
+	 * Todellinen vahinkomäärä saadaan kertomalla tämä seinän normaalin ja
+	 * aluksen nopeusvektorin pistetulon vastaluvulla. */
 	public static final float COLLISION_DAMAGE_FACTOR = 0.1f;
 
+	/** Pelialueen geometria */
 	private AreaGeometry geometry;
+	/** Taulukko kaikista peliin liittyneistä pelaajista. */
 	private ArrayList<Player> players = new ArrayList<Player>();
+	/** Taulukko kaikista ilmassa olevista ammuksista. */
 	private ArrayList<Bullet> bullets = new ArrayList<Bullet>();
 
+	/** Taulukko pelaajien indekseistä players-taulukossa.
+	 * Jos pelaajan ID on i, ja se sijaitsee players-taulukossa
+	 * kohdassa a, niin playerIndex[i] = a. Tämän taulukon avulla
+	 * löydetään siis pelaaja ID-numeron perusteella vakioajassa.
+	 */
 	private int[] playerIndex = new int[256];
 
+	/** Pelifysiikan tapahtumia tarkkailemaan asetettu olio. */
 	PhysicsObserver observer;
 
+	/** Luo uuden GamePhysics-olion lataamalla pelialueen tiedot tiedostosta.
+	 * @param file tiedosto, josta kentän tiedot ladataan
+	 */
 	public GamePhysics(File file) throws IOException {
 		geometry = new AreaGeometry(file);
 	}
+	/** Luo GamePhysics-olion alustamatta pelialuetta.
+	 * Mitään seiniin törmäyksiä ei tunnisteta ennen kuin
+	 * geometry-oliolle on muuten kerrottu kentän esteistä.
+	 */
 	public GamePhysics() {
 		geometry = new AreaGeometry();
 	}
@@ -68,7 +92,7 @@ public class GamePhysics {
 				continue;
 			Point2D.Float loc = localPlayer.location;
 			float dist2 = pointLineDistSq(loc, prevLoc, b.location);
-			if (dist2 < BULLET_HIT_RANGE_SQ) {
+			if (dist2 < BULLET_HIT_RANGE*BULLET_HIT_RANGE) {
 //				System.out.printf("bullet hit: %f ; %f %f ; %f %f\n", dist2, b.location.x, b.location.y, p.location.x, p.location.y);
 				deleteBullet(i);
 				if (observer!=null)
