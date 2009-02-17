@@ -119,14 +119,17 @@ public class AreaGeometry {
 
 					sizeW = Integer.parseInt(parts[0]);
 					sizeH = Integer.parseInt(parts[1]);
+					if (sizeW <= 0 || sizeH <=0)
+						readError(file,lineCount,"Alueen koon oltava positiivinen.");
 					borderColor = new Color(Integer.parseInt(parts[2],16), false);
 				} else {
 					// lue polygonin väri ja kärjet
 					String[] parts = line.split("\\s");
-					if (parts.length%2==0)
+					if (parts.length<3 || parts.length%2==0)
 						readError(file,lineCount,"Polygonin x- ja y-koordinaattien määrä ei täsmää.");
 
 					ColoredPolygon p = new ColoredPolygon();
+					int color - Integer.parseInt(parts[0], 16);
 					p.color = new Color(Integer.parseInt(parts[0], 16), false);
 
 					for(int i=1; i<parts.length; i+=2) {
@@ -142,8 +145,11 @@ public class AreaGeometry {
 		} catch(NumberFormatException e) {
 			readError(file,lineCount,"Virheellinen numeroformaatti.");
 		}
+		if (sizeW==0) {
+			readError(file,lineCount,"Kentän kokoa ei määritetty tiedostossa.");
+		}
 	}
-	/** Heittää poikkeuksen, joka kertoo kenttätiedoston luvussa tapahtuneesta virheestä.
+	/** Heittää poikkeuksen, joka kertoo kenttätiedoston lukemisessa tapahtuneesta virheestä.
 	 * @param file tiedosto, jota oltiin lukemassa
 	 * @param line tiedoston rivi, jolla virhe tapahtui
 	 * @param msg lisätietoa virheestä

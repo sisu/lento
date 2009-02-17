@@ -1,0 +1,5 @@
+# Testaa tapausta, jossa annetaan eri määrä x- ja y-komponentteja polygonin kärjiksi
+100 100 aabbcc
+
+# 3 x-komponenttia ja 2 y-komponenttia
+ccddee 10 10 50 10 50

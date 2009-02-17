@@ -108,7 +108,7 @@ public class GameLoop {
 
 				int maxShoots = (int)(localPlayer.shootEnergy / LocalPlayer.SHOOT_ENERGY_USE);
 				int count = physics.createLocalBullets(localPlayer, prevTime, time, localPlayer.nextShootTime, localPlayer.nextBulletID, maxShoots);
-				if (count!=0) System.out.println("cnt "+count);
+//				if (count!=0) System.out.println("cnt "+count);
 				localPlayer.nextBulletID += count;
 				localPlayer.nextShootTime += count*GamePhysics.SHOOT_INTERVAL;
 				localPlayer.shootEnergy -= count*LocalPlayer.SHOOT_ENERGY_USE;

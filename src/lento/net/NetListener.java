@@ -390,7 +390,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			sendUDPPacket(outBuffer.getData(), outBuffer.size());
 		}
 		if (!localShoots.isEmpty()) {
-			System.out.printf("Sending %d bullets\n", localShoots.size());
+//			System.out.printf("Sending %d bullets\n", localShoots.size());
 			outBuffer.reset();
 			DataOutputStream out = new DataOutputStream(outBuffer);
 			out.write(UDP_PLAYER_SHOOT);

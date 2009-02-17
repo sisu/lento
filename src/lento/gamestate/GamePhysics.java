@@ -126,7 +126,7 @@ public class GamePhysics {
 			dot = -dot;
 		}
 		pl.health -= ((int)(-dot*COLLISION_DAMAGE_FACTOR));
-		System.out.printf("%f\n", dot);
+//		System.out.printf("%f\n", dot);
 		final float asd = 3;
 		if (dot >= -asd) dot -= asd;
 		speed.x -= 2*dot*normal.x;
