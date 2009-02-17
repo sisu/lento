@@ -151,7 +151,7 @@ public class GamePhysics {
 		pl.location.x -= factor*normal.x;
 		pl.location.y -= factor*normal.y;
 
-		final float eps = 1e-3f;
+		final float eps = 1e-5f;
 		pl.prevLocation.x = loc.x+speed.x*eps;
 		pl.prevLocation.y = loc.y+speed.y*eps;
 	}

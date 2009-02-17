@@ -59,4 +59,8 @@ public class TestGeom {
 		coll = geom.getCollision(a,b);
 		assertNotNull(coll);
 	}
+	@Test public void createTest() {
+		AreaGeometry geom = new AreaGeometry();
+		geom.resetArea(1000, 1000);
+	}
 }

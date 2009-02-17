@@ -98,6 +98,8 @@ public class AreaGeometry {
 
 	/** Lukee pelialueen tiedot tiedostosta.
 	 * @param file tiedosto, josta pelialueen tiedot luetaan.
+	 *
+	 * @throws IOException Tiedostoa ei löydy tai sen muotoilu on virheellinen.
 	 */
 	private void readFile(File file) throws IOException {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
@@ -121,7 +123,7 @@ public class AreaGeometry {
 					sizeH = Integer.parseInt(parts[1]);
 					if (sizeW <= 0 || sizeH <=0)
 						readError(file,lineCount,"Alueen koon oltava positiivinen.");
-					borderColor = new Color(Integer.parseInt(parts[2],16), false);
+					borderColor = getColor(parts[2]);
 				} else {
 					// lue polygonin väri ja kärjet
 					String[] parts = line.split("\\s");
@@ -129,8 +131,7 @@ public class AreaGeometry {
 						readError(file,lineCount,"Polygonin x- ja y-koordinaattien määrä ei täsmää.");
 
 					ColoredPolygon p = new ColoredPolygon();
-					int color - Integer.parseInt(parts[0], 16);
-					p.color = new Color(Integer.parseInt(parts[0], 16), false);
+					p.color = getColor(parts[0]);
 
 					for(int i=1; i<parts.length; i+=2) {
 						int x = Integer.parseInt(parts[i]), y = Integer.parseInt(parts[i+1]);
@@ -143,7 +144,7 @@ public class AreaGeometry {
 			// Lisää kentän reunat särmiin
 			setSize(sizeW,sizeH);
 		} catch(NumberFormatException e) {
-			readError(file,lineCount,"Virheellinen numeroformaatti.");
+			readError(file,lineCount,"Virheellinen numeroformaatti: "+e.getMessage());
 		}
 		if (sizeW==0) {
 			readError(file,lineCount,"Kentän kokoa ei määritetty tiedostossa.");
@@ -296,5 +297,17 @@ public class AreaGeometry {
 		x1-=x0; y1-=y0;
 		x2-=x0; y2-=y0;
 		return x1*y2-x2*y1;
+	}
+	/** Lukee merkkijonosta heksana esitetyn RGB-muotoisen väriarvon.
+	 * @param str merkkijono, josta väriarvo luetaan
+	 * @return luettu väriarvo
+	 * 
+	 * @throws NumberFormatException virheellinen lukuarvo
+	 */
+	private static Color getColor(String str) throws NumberFormatException {
+		int num = Integer.parseInt(str, 16);
+		if (num < 0 || num >= 1<<24)
+			throw new NumberFormatException("Virheellinen väriarvo");
+		return new Color(num);
 	}
 }
