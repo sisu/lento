@@ -210,8 +210,8 @@ public class GamePhysics {
 			float locY = td*player.location.y + (1-td)*player.prevLocation.y;
 			float sa = (float)Math.sin(player.angle);
 			float ca = (float)Math.cos(player.angle);
-			locX += ca*(BULLET_HIT_RANGE+5);
-			locY -= sa*(BULLET_HIT_RANGE+5);
+			locX += ca*(BULLET_HIT_RANGE*2);
+			locY -= sa*(BULLET_HIT_RANGE*2);
 			float vx = ca*BULLET_SPEED + player.speedVec.x;
 			float vy = -sa*BULLET_SPEED + player.speedVec.y;
 

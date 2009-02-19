@@ -22,6 +22,9 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * Jos tämä on varattu, yritetään tätä seuraavia porttinumeroita. */
 	static public final int DEFAULT_TCP_PORT = 53256;
 
+	/** Aikaraja, joka yhdistämistä yrittäessä odotetaan ennen luovuttamista. */
+	static private final int CONNECT_TIMEOUT = 2000;
+
 	static final int TCP_GET_AREA_INFO = 0x01;
 	static final int TCP_GET_PLAYER_INFO = 0x02;
 	static final int TCP_AREA_INFO = 0x03;
@@ -53,7 +56,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Hajautustaulu, jonka avulla haetaan UDP-paketin saapuessa paketin
 	 * lähettää vastaava NetPlayer-olio.
 	 */
-	HashMap<ConnectionInfo,NetPlayer> playerTable = new HashMap<ConnectionInfo,NetPlayer>();
+	HashMap<InetSocketAddress,NetPlayer> playerTable = new HashMap<InetSocketAddress,NetPlayer>();
 
 	/** Paikallisen pelaajan tällä framella ampumat ammukset.
 	 * Näistä pidetään kirjaa muille pelaajille lähettämistä varten. */
@@ -95,7 +98,15 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * @return paikalliselle pelaajalle asetettu pelaaja-ID
 	 */
 	public int connect(InetAddress addr, int port) throws IOException {
-		Socket socket = new Socket(addr,port);
+		System.out.println("jee saatiin socket.");
+
+		Socket socket = new Socket();
+		socket.connect(new InetSocketAddress(addr,port), CONNECT_TIMEOUT);
+
+		if (!socket.isConnected())
+			throw new IOException("Yhteyden muodostus etäkoneeseen epäonnistui");
+
+		System.out.println("jee saatiin socket.");
 		return handleOwnJoin(socket);
 	}
 
@@ -149,7 +160,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			DatagramPacket p = new DatagramPacket(buf, buf.length);
 			while(!done) {
 				udpSocket.receive(p);
-				ConnectionInfo info = new ConnectionInfo(p.getAddress(), p.getPort());
+				InetSocketAddress info = new InetSocketAddress(p.getAddress(), p.getPort());
 				NetPlayer from = playerTable.get(info);
 				if (from==null)
 					System.out.println("Warning: packet from unknown host: "+p.getAddress().toString()+" : "+p.getPort());
@@ -169,7 +180,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	void deletePlayer(NetPlayer player) {
 		physics.deletePlayer(player);
 		players.remove(player);
-		playerTable.remove(new ConnectionInfo(player));
+		playerTable.remove(getSocketAddress(player));
 	}
 
 	/** Pyytää etäpelaajalta pelin tiedot ja liittyy sen jälkeen itse peliin.
@@ -249,7 +260,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 		for(int i=0; i<count-1; ++i) {
 			NetPlayer pl = new NetPlayer(in, this);
 			players.add(pl);
-			playerTable.put(new ConnectionInfo(pl), pl);
+			playerTable.put(getSocketAddress(pl), pl);
 		}
 	}
 
@@ -290,7 +301,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 */
 	synchronized void gotJoinOK(NetPlayer pl) {
 		physics.addPlayer(pl);
-		playerTable.put(new ConnectionInfo(pl), pl);
+		playerTable.put(getSocketAddress(pl), pl);
 		--waitCount;
 		notify();
 	}
@@ -431,7 +442,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 */
 	void playerJoined(NetPlayer pl) {
 		physics.addPlayer(pl);
-		playerTable.put(new ConnectionInfo(pl), pl);
+		playerTable.put(getSocketAddress(pl), pl);
 	}
 
 
@@ -501,4 +512,11 @@ public class NetListener implements Runnable, PhysicsObserver {
 		return id;
 	}
 
+	/** Palauttaa pelaajan UDP-yhteyttä vastaavan InetSocketAddress-olion.
+	 * @param pl pelaaja, jonka yhteystiedot haetaan
+	 * @return pelaajan verkko-osoitetta ja porttia vastaava olio
+	 */
+	private static InetSocketAddress getSocketAddress(NetPlayer pl) {
+		return new InetSocketAddress(pl.socket.getInetAddress(), pl.udpPort);
+	}
 }

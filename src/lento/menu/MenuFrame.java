@@ -50,37 +50,52 @@ public class MenuFrame extends JFrame implements ActionListener {
 	 */
 	public void actionPerformed(ActionEvent ae) {
 		String action = ae.getActionCommand();
-		System.out.println(action);
+//		System.out.println(action);
 		try {
 			loop=null;
 			String name=playerInfo.nameField.getText();
+			if (name.isEmpty())
+				throw new Exception("Pelaajanimi puuttuu");
+
 			Color color = playerInfo.color;
+
 			if (action.equals("host")) {
 				loop = new GameLoop(new File(host.filename.getText()), name, color);
 			} else if (action.equals("join")) {
-				InetAddress addr = InetAddress.getByName(join.hostField.getText());
+				String addrName = join.hostField.getText();
+				if (addrName.isEmpty())
+					throw new Exception("Verkko-osoite annettava");
+
+				InetAddress addr = InetAddress.getByName(addrName);
 				int port = Integer.parseInt(join.portField.getText());
 				loop = new GameLoop(addr,port,name,color);
 			}
-			if (loop!=null) {
-				// Java odottaa, että tästä metodista palataan ennen uusien
-				// tapahtumien käsittelyä, joten avataan peli uuteen säikeeseen.
-				new Thread(new Runnable() {
-					public void run() {
-						setVisible(false);
-						try {
-							loop.start();
-						} catch(IOException e) {
-							e.printStackTrace();
-						}
-						setVisible(true);
-					}
-				}).start();
-			}
+		} catch(UnknownHostException e) {
+			JOptionPane.showMessageDialog(null, "Virheellinen verkko-osoite");
 		} catch(Exception e) {
 			// FIXME: näytä joku ruma dialogi
-			System.out.println(e.getMessage());
-			e.printStackTrace();
+			String msg = e.getMessage();
+			JOptionPane.showMessageDialog(null, "Pelin lataamisessa sattui virhe:\n" +msg);
+//			System.out.println(e.getMessage());
+//			e.printStackTrace();
+		}
+		if (loop!=null) {
+			// Java odottaa, että tästä metodista palataan ennen uusien
+			// tapahtumien käsittelyä, joten peli on avattava uuteen säikeeseen,
+			// jotta koko systeemi ei jumittuisi.
+			new Thread(new Runnable() {
+				public void run() {
+					setVisible(false);
+					try {
+						loop.start();
+					} catch(IOException e) {
+						String msg = e.getMessage();
+						JOptionPane.showMessageDialog(null, "Pelissä tapahtui virhe:\n" +msg);
+						e.printStackTrace();
+					}
+					setVisible(true);
+				}
+			}).start();
 		}
 	}
 

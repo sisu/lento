@@ -37,6 +37,8 @@ Pelialueen korkeus ja leveys: 106 pikseliä.
 Pelaajan nimi saa olla korkeintaan 32 merkkiä pitkä.
 Kaikki alueen esteet saavat yhteensä koostua maksimissaan 65535 verteksistä.
 
+Huomaa kuitenkin, että pelin ei taata toimivan sulavasti suurimmilla sallituilla pelaaja- tai polygonimäärillä hitailla tietokoneilla.
+
 !! Virheilmoitukset
 
 TODO

@@ -2,8 +2,14 @@
 
 !! Yleiskuvaus
 
-Ohjelman luokat ovat jaettu neljään pakettiin:
+Ohjelman luokat on jaettu neljään pakettiin:
 - lento.gamestate: Pelin fysiikasta huolehtivat luokat.
 - lento.net: tapahtuvaan kommunikointiin liittyvät luokat.
 - lento.gameui: Pelin aikana käyttäjän kanssa kommunikoinnista huolehtivat luokat.
 - lento.menu: Alkuvalikosta huolehtivat luokat.
+
+Pakettien välisiä riippuvuuksia kuvaa seuraava kaavio:
+
+<insert kaavio here>
+
+
