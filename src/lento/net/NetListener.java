@@ -23,7 +23,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	static public final int DEFAULT_TCP_PORT = 53256;
 
 	/** Aikaraja, joka yhdistämistä yrittäessä odotetaan ennen luovuttamista. */
-	static private final int CONNECT_TIMEOUT = 2000;
+	static final int CONNECT_TIMEOUT = 2000;
 
 	static final int TCP_GET_AREA_INFO = 0x01;
 	static final int TCP_GET_PLAYER_INFO = 0x02;

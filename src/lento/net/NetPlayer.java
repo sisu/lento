@@ -273,7 +273,8 @@ class NetPlayer extends Player implements Runnable {
 		System.out.println("got address and port: "+addr.toString()+" "+tcpPort);
 
 		if (socket==null) {
-			socket = new Socket(addr, tcpPort);
+			socket = new Socket();
+			socket.connect(new InetSocketAddress(addr, tcpPort), NetListener.CONNECT_TIMEOUT);
 			System.out.println("opened new socket");
 		}
 
