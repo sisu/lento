@@ -3,7 +3,10 @@ package lento.gamestate;
 import java.awt.geom.*;
 
 /**
- * Sisältää tiedot yhdestä ilmassa olevasta ammuksesta.
+ * Bullet sisältää tiedot yhdestä ilmassa olevasta ammuksesta.
+ * Tämä luokka ei tiedä huolehdi itse mitenkään mm. törmäyksistä, vaan
+ * kykenee ainoastaan päivittämään sijaintiaan, kuin ammus olisi
+ * tyhjässä tilassa.
  */
 public class Bullet {
 

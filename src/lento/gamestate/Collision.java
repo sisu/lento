@@ -3,8 +3,13 @@ package lento.gamestate;
 import java.awt.geom.*;
 
 /**
- * Sisältää tiedon kentän esteen tai reunan ja siihen osuneen
+ * Sisältää tiedon kentän esteen tai reunan ja siihen osuneen kappaleen
  * välisestä törmäyksestä.
+ * <p>
+ * Tämä on yksinkertainen säiliöluokka, jota käytetään ainoastaan
+ * törmäystiedon kertomisessa funktiokutsun paluuarvona AreaGeometry-luokassa.
+ *
+ * @see AreaGeometry
  */
 class Collision {
 	/** Paikka, jossa törmäys tapahtui. */

@@ -5,6 +5,7 @@ import java.util.*;
 import java.io.*;
 
 /** Kirjoituspuskurin suoran käytön salliva wrapper-luokka ByteArrayOutputStream-luokalle.
+ * <p>
  * Luokka ei varsinaisesti laajenna ByteArrayOutputStream-luokan toiminnallisuutta,
  * mutta se mahdollistaa kirjoituspuskurin epäturvallisen suoran lukemisen
  * tehokkuussyistä.

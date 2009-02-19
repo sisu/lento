@@ -5,8 +5,11 @@ import java.awt.geom.*;
 
 /**
  * Luokka sisältää yksittäisen pelaajan tiedot pelin aikana.
+ * <p>
+ * Player-luokka sisältää tietoa ainoastaan pelaajan omasta tilasta,
+ * eikä tiedä mitään esim. sijainnin päivityksen aiheuttamista törmäyksistä.
  */
-public class Player {
+public class Player implements Comparable<Player> {
 
 	/** Aluksen peruskiihtyvyys (pix/s^2) */
 	private static final float ACCEL_SPEED = 800.0f;
@@ -179,5 +182,14 @@ public class Player {
 	 */
 	public void addHitDone() {
 		damageDone += GamePhysics.BULLET_DAMAGE;
+	}
+
+	/** Vertaa tätä oliota toiseen pelaaja-olioon tappojen ja kuolemien suhteen perusteella.
+	 * @param pl pelaaja, johon vertaillaan
+	 * @return negatiivinen tai positiivinen luku tai nolla riippuen, onko tämän
+	 *         olion suhde pienempi, suurempi vai yhtäsuuri kuin vertailtavan
+	 */
+	public int compareTo(Player pl) {
+		return (int)((long)pl.deaths*kills - (long)pl.kills*deaths);
 	}
 }

@@ -6,7 +6,13 @@ import java.awt.*;
 import java.awt.geom.*;
 
 /**
- * LocalPlayer-luokka sisältää paikallisella koneella pelaavan pelaajan tiedot ja huolehtii syötteen lukemisesta näppäimistöltä.
+ * LocalPlayer-luokka sisältää paikallisella koneella pelaavan pelaajan tiedot
+ * ja huolehtii syötteen lukemisesta näppäimistöltä.
+ * <p>
+ * Syötteenluvusta huolehtimisen lisäksi LocalPlayer-olio joutuu pitämään
+ * kirjaa niistä pelaajatiedoista, joista ei verkkopelaajien kohdalla
+ * piitata.<br>
+ * Näitä ovat aika, jolloin pelaaja saa syntyä uudelleen ja ampumisenergia.
  */
 class LocalPlayer extends Player implements KeyListener {
 

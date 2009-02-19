@@ -6,9 +6,17 @@ import java.io.*;
 import java.awt.*;
 import java.net.*;
 
+import javax.sound.midi.*;
+
 /**
  * GameLoop huolehtii pelin aikana verkon, fysiikan ja paikallisen piirron ja
  * syötteenluvun välisestä kommunikaatiosta.
+ * <p>
+ * GameLoop-olio luodaan pelin alustuksen yhteydessä ensimmäisenä, ja se
+ * huolehtii verkon ja fysiikan alustuksesta sekä peli-ikkunan avaamisesta.
+ * <p>
+ * GameLoop kutsuu pelin aikana eri olioiden tilanpäivitysfunktioita, ja
+ * pyrkii pitämään ruudunpäivitysnopeuden vakiona.
  */
 public class GameLoop {
 
@@ -28,6 +36,9 @@ public class GameLoop {
 	private static final int MAX_FPS = 80;
 	/** Yhteen frameen minimissään käytettävä aika nanosekunteina. */
 	private static final long FRAME_TIME = (long)1e9 / MAX_FPS;
+
+	/** TODO */
+	Sequencer midiSeq;
 
 	/** Luo uuden pelin yhdistämättä keneenkään muuhun.
 	 * @param file tiedosto, josta pelialueen tiedot luetaan
@@ -72,6 +83,17 @@ public class GameLoop {
 		frame.addKeyListener(localPlayer);
 
 		new Thread(net).start();
+
+		Sequencer midiSeq=null;
+		try {
+			midiSeq = MidiSystem.getSequencer();
+			midiSeq.setSequence(MidiSystem.getSequence(new File("music.mid")));
+			midiSeq.open();
+			midiSeq.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
+			midiSeq.start();
+		} catch(Exception e) {
+			System.out.println("Warning: playing music failed: "+e.getMessage());
+		}
 
 		System.out.println("starting game loop");
 
@@ -141,6 +163,11 @@ public class GameLoop {
 				// poikkeusta ei tarvitse käsitellä; ei suurta väliä saatiinko kaikki suljettua
 			}
 			frame.setVisible(false);
+
+			if (midiSeq!=null) {
+				midiSeq.stop();
+				midiSeq.close();
+			}
 		}
 	}
 }

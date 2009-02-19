@@ -2,6 +2,12 @@ package lento.gamestate;
 
 /**
  * Rajapinta paikallisen pelaajan tapahtumien seuraamiseen.
+ * <p>
+ * GamePhysics-olio kutsuu sille asetetun PhysicsObserver-olion metodeita, kun
+ * paikalliselle pelaajalle tapahtuu jotain tai pelaaja tekee jotain.
+ * Etäpelaajien tapahtumia ei raportoida.
+ *
+ * @see GamePhysics
  */
 public interface PhysicsObserver {
 	/** Kutsutaan, kun pelaajaan osuu ammus.

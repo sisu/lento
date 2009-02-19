@@ -4,20 +4,28 @@
 
 Lento on verkossa pelattava luolalentelypeli, jossa tarkoituksena on ohjata lentävää alusta 2-ulotteisessa tilassa ja ampua muita pelaajia ja väistellä heidän ammuksiaan.
 
+
 !! Ajo-ohje
 
 Ohjelma käynnistetään <TODO: jar-paketti???>.
-Uuden pelin luomiseen tarvitset kenttätiedoston, joka määrittää pelialueen koon ja esteet. Kenttätiedostot ovat tekstimuotoisia, joten voit muokata ja luoda niitä tavallisella tekstieditorilla, ks. liite <TODO>.
-Jos liityt käynnissä olevaan peliin, et tarvitse itse ohjelman lisäksi muita tiedostoja, mutta sinun on tiedettävä jonkun pelissä olijan koneen IP-osoite tai domain-nimi sekä porttinumero. Peli käyttää oletuksena porttia <TODO>.
+Uuden pelin luomiseen tarvitset kenttätiedoston, joka määrittää pelialueen koon ja esteet. Kenttätiedostot ovat tekstimuotoisia, joten voit muokata ja luoda niitä tavallisella tekstieditorilla, ks. kohta syötetiedostot <FIXME>.
+Jos liityt käynnissä olevaan peliin, et tarvitse itse ohjelman lisäksi muita tiedostoja, mutta sinun on tiedettävä jonkun pelissä olijan koneen IP-osoite tai domain-nimi sekä porttinumero. Peli käyttää oletuksena porttia 53256.
+
+Huomaa, että peli tarvitsee toimiakseen UDP-yhteyden kaikkiin pelaajiin, joten palomuurin yli pelaaminen ei välttämättä onnistu. Parhaiten pelaaminen onnistuu lähiverkossa.
+
 
 !! Laitteistovaatimukset
 
 Java-1.6
-TODO: jotain tähän?
+128Mt muistia
+Ohjelmaa on testattu ainoastaan Linux-ympäristössä.
+
 
 !! Ohjelman toiminnot
 
 ! Alkuvalikon toiminnot
+
+Alkuvalikosta valitaan pelaajan nimi ja aluksen väri, minkä jälkeen joko luodaan uusi peli tai yhdistetään olemassaolevaan peliin. Pelaajanimi-kenttään on pakko kirjoittaa jokin nimi peliin päästäkseen.
 
 ! Toiminnot pelitilassa
 
@@ -29,6 +37,22 @@ ESC         | Palaa alkuvalikkoon
 alt-F4      | Sulje peli
 tab         | Näytä pistetilastot
 
+
+!! Syötetiedot
+
+Uutta peliä luodessa valitaan alkuvalikosta kenttätiedosto.
+Kenttätiedostot ovat tekstimuotoisia, ja niitä voi helposti muokata ja luoda tavallisella tekstieditorilla.
+Kenttätiedoston ensimmäinen rivi on muotoa: <leveys> <korkeus> <väri>
+Tätä seuraa miten monta tahansa yhden polygonin määrittävää riviä muodossa: <väri> <x1> <y1> <x2> <y2> ... <xn> <yn>
+, missä koordinaattiparit (<xi>,<yi>) määrittävät polygonin kärkipisteet.
+Kaikki väriparametrit annetaan RGB:nä heksamuodossa, esim. punainen väri on ff0000.
+
+
+!! Tulostetiedot
+
+Ohjelma tulostaa uutta peliä luodessa komentoriville porttinumeron, johon muiden yhteydenottoa odottava TCP-socket kiinnitettiin. Tämä on normaalisti pelin oletusporttinumero (53256), mutta voi olla myös jokin tätä suurempi numero, jos kyseinen portti ei ole käytettävissä.
+
+
 !! Ohjelman rajoitukset
 
 Maksimimäärä pelaajia yhdessä pelissä: 127.
@@ -37,7 +61,8 @@ Pelialueen korkeus ja leveys: 106 pikseliä.
 Pelaajan nimi saa olla korkeintaan 32 merkkiä pitkä.
 Kaikki alueen esteet saavat yhteensä koostua maksimissaan 65535 verteksistä.
 
-Huomaa kuitenkin, että pelin ei taata toimivan sulavasti suurimmilla sallituilla pelaaja- tai polygonimäärillä hitailla tietokoneilla.
+Huomaa, että pelin ei voida taata toimivan sulavasti suurimmilla sallituilla pelaaja- tai polygonimäärillä hitailla tietokoneilla. Todellisuudessa peli saattaa suorittimen kuorman tai verkkoviiveen vuoksi tulla peluukelvottomaksi jo paljon tässä esitettyjä rajoja pienemmilläkin pelaaja- tai polygonimäärillä.
+
 
 !! Virheilmoitukset
 

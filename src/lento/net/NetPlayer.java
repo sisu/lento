@@ -9,6 +9,7 @@ import java.util.*;
 
 /**
  * NetPlayer pitää kirjaa yhden etäpelaajan tiedoista.
+ * <p>
  * Uusi NetPlayer-olio luodaan jokaiselle palvelimeen yhdistävälle
  * asiakasohjelmalle, vaikka asiakasohjelma ei vielä olisikaan
  * liittynyt peliin.

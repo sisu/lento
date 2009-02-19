@@ -9,11 +9,14 @@ import java.awt.geom.*;
 
 /** NetListener huolehtii kaikista peliin liittyneistä etäpelaajista ja
  * kommunikoinnista niiden kanssa.
+ * <p>
  * NetListener-olio odottaa uusia TCP-yhteyksiä, ja luo uuden NetPlayer-olion
  * jokaiselle yhdistävälle pelaajalle.
+ * <p>
  * NetListener-huolehtii myös UDP-pakettien lukemisesta, ja antaa paketin
  * aina sen NetPlayer-olion käsiteltäväksi, jonka verkko-osoitteesta paketti
  * tuli.
+ *
  * @see lento.net.NetPlayer
  */
 public class NetListener implements Runnable, PhysicsObserver {

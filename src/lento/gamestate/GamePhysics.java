@@ -5,7 +5,11 @@ import java.awt.geom.*;
 import java.io.*;
 
 /**
- * GamePhysics pitää kirjaa pelialueesta ja kaikista pelin pelaajista ja ammuksista, ja huolehtii näiden päivityksistä.
+ * GamePhysics pitää kirjaa pelialueesta ja kaikista pelin pelaajista ja ammuksista,
+ * ja huolehtii näiden päivityksistä.
+ * <p>
+ * Peliä varten luodaan aina tasan yksi GamePhysics-olio, jonka kautta suurin osa
+ * pelin fysiikan hallinnasta tehdään.
  */
 public class GamePhysics {
 
@@ -40,13 +44,13 @@ public class GamePhysics {
 	 */
 	private int[] playerIndex = new int[256];
 
+	// FIXME: älä varaa koko taulukkoa? (vie 64Mt muistia)
 	/** Taulukko siitä, missä indeksissä mikäkin kunkin pelaajan ampuma 
 	 * ammus sijaitsee bullets-taulukossa.
 	 * Jos ammuksen x ampujan ID on a ja ammus-ID b, niin pätee:
 	 * bulletIndex[a][b] = x.
 	 */
-	// FIXME
-	int[][] bulletIndex = new int[256][65536];
+	private int[][] bulletIndex = new int[256][65536];
 
 	/** Pelifysiikan tapahtumia tarkkailemaan asetettu olio. */
 	PhysicsObserver observer;
@@ -114,7 +118,7 @@ public class GamePhysics {
 				if (localPlayer.health <= 0) {
 					localPlayer.alive = false;
 					localPlayer.deaths++;
-					if (shooter!=null)
+					if (shooter!=null && shooter.id!=localPlayer.id)
 						shooter.kills++;
 					if (observer!=null)
 						observer.die(b.getShooter(), Player.INITIAL_HEALTH-localPlayer.health);
@@ -173,20 +177,17 @@ public class GamePhysics {
 	 * @param i poistettavan ammuksen indeksi bullets-taulukossa
 	 */
 	private void deleteBullet(int i) {
-		// Siirretään taulukon viimeinen alkio poistettavan tilalle
-		int size = bullets.size();
-		if (i>=size) return;
-		Bullet last = bullets.get(size-1);
-		bullets.set(i, last);
-		bullets.remove(size-1);
+		synchronized(bullets) {
+			// Siirretään taulukon viimeinen alkio poistettavan tilalle
+			int size = bullets.size();
+			if (i>=size) return;
+			Bullet last = bullets.get(size-1);
+			bullets.set(i, last);
+			bullets.remove(size-1);
 
-		bulletIndex[last.getShooter()][last.getID()] = i;
+			bulletIndex[last.getShooter()][last.getID()] = i;
+		}
 	}
-	public synchronized void deleteBullet(Bullet b) {
-		Player pl = players.get(playerIndex[b.getShooter()]);
-		deleteBullet(bulletIndex[pl.id][b.getID()]);
-	}
-
 	/** Lisää pelaajan pelaajien listaan.
 	 * @param pl lisättävä pelaaja
 	 */

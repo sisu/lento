@@ -9,8 +9,13 @@ import java.awt.event.*;
 import java.util.*;
 
 /**
- * GameFrame piirtää peliruutua pelin ollessa käynnissä.
+ * GameFrame avaa ikkunan ja päivittää peliruutua pelin ollessa käynnissä.
  * Luokka huolehtii sekä tavallisen peliruudun että pistenäytön piirtämisestä.
+ * <p>
+ * Avatun ikkunan kokoa voi muuttaa vapaasti, mutta pistenäyttö ei välttämättä
+ * näy kokonaan kovin pienellä näytöllä.
+ * <p>
+ * GameFrame käyttää kaksoispuskurointia piirtoon.
  */
 class GameFrame extends JFrame {
 
@@ -136,11 +141,14 @@ class GameFrame extends JFrame {
 		// Piirrä ammukset
 		g2.setTransform(identity);
 		g2.setColor(Color.white);
-		for(Bullet b : physics.getBullets()) {
-			Point2D.Float bloc = b.getLoc();
+		ArrayList<Bullet> bullets = physics.getBullets();
+		synchronized(bullets) {
+			for(Bullet b : bullets) {
+				Point2D.Float bloc = b.getLoc();
 
-			Rectangle r = new Rectangle((int)(bloc.x+midX), (int)(bloc.y+midY), 1, 1);
-			g2.fill(r);
+				Rectangle r = new Rectangle((int)(bloc.x+midX), (int)(bloc.y+midY), 1, 1);
+				g2.fill(r);
+			}
 		}
 
 		// Piirrä palkit
@@ -185,13 +193,7 @@ class GameFrame extends JFrame {
 			g2.drawString(titles[i], NAME_LEFT_SPACE+NAME_FIELD_SIZE+(i-1)*FIELD_W_SIZE, SCORE_UP_SPACE);
 
 		ArrayList<Player> players = new ArrayList<Player>(physics.getPlayers());
-		Collections.sort(players, new Comparator() {
-			public int compare(Object a, Object b) {
-				int[] s1 = ((Player)a).getStats();
-				int[] s2 = ((Player)b).getStats();
-				return (int)((long)s1[1]*s2[0] - (long)s2[1]*s1[0]);
-			}
-		});
+		Collections.sort(players);
 
 		int x=1;
 		for(Player pl : players) {
