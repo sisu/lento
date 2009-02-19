@@ -12,7 +12,7 @@ public class GamePhysics {
 	/** Gravitaatiovoiman aiheuttama kiihtyvyys (pix/s^2) */
 	static final float GRAVITY = 50.0f;
 	/** Moninkokertaiseksi aluksen nopeus muuttuu seinään törmätessä */
-	static final float SLOWDOWN_FACTOR = .8f;
+	static final float SLOWDOWN_FACTOR = .6f;
 	/** Etäisyys, jonka saavutettuaan ammus osuu pelaajaan. */
 	static final float BULLET_HIT_RANGE = 8.f;
 	/** Ammuksen lähtönopeus */
@@ -178,7 +178,6 @@ public class GamePhysics {
 	public synchronized void addPlayer(Player pl) {
 		playerIndex[pl.getID()] = players.size();
 		players.add(pl);
-		// TODO: allocate stuff for bullets
 	}
 	/** Lisää ammuksen ilmassa olevien ammusten listaan.
 	 * @param b ammuttu ammus

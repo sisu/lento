@@ -316,6 +316,8 @@ class NetPlayer extends Player implements Runnable {
 		out.write(name, 0, name.length);
 
 		NetListener.writeColor(out, listener.localPlayer.getColor());
+
+		out.flush();
 	}
 	
 	/** Käsittelee tältä etäpelaajalta tulleen UDP-paketin.
@@ -326,21 +328,21 @@ class NetPlayer extends Player implements Runnable {
 		int type = in.read();
 //		System.out.println("Paketti: "+type);
 		try {
-		switch(type) {
-			case NetListener.UDP_PLAYER_STATE:
-				updatePlayerState(in);
-				break;
-			case NetListener.UDP_PLAYER_SHOOT:
-				readBullets(in);
-				break;
-			case NetListener.UDP_PLAYER_HIT:
-				readHits(in);
-				break;
-			default:
-				System.out.println("Warning: unknown UDP packet type: "+type);
-		}
+			switch(type) {
+				case NetListener.UDP_PLAYER_STATE:
+					updatePlayerState(in);
+					break;
+				case NetListener.UDP_PLAYER_SHOOT:
+					readBullets(in);
+					break;
+				case NetListener.UDP_PLAYER_HIT:
+					readHits(in);
+					break;
+				default:
+					System.out.println("Warning: unknown UDP packet type: "+type);
+			}
 		} catch(IOException e) {
-			System.out.printf("Bad data from client %s : %d\n", socket.getInetAddress().toString(), udpPort);
+			System.out.printf("Warning: Bad data from client %s (%s : %d)\n", name, socket.getInetAddress().toString(), udpPort);
 			// FIXME: katkaise yhteys?
 		}
 	}
@@ -400,7 +402,7 @@ class NetPlayer extends Player implements Runnable {
 		DataInputStream in = new DataInputStream(istream);
 
 		int count = istream.available()/3;
-		System.out.println("hits count: "+count);
+//		System.out.println("hits count: "+count);
 		for(int i=0; i<count; ++i) {
 			int shooter = in.readUnsignedByte();
 			int bulletID = in.readUnsignedShort();

@@ -71,7 +71,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 
 	// FIXME: jos joku ei hyväksykään?
 	/** Tieto, monenko pelaajan hyväksyntää paikallisen pelaajan peliin
-	 * liittymiselle vielä odotetaan. */
+	 * liittymiselle vielä odotetaan, tai -1, jos liittyminen epäonnistui. */
 	private int waitCount=0;
 
 	// FIXME: hajoamiset?
@@ -278,8 +278,11 @@ public class NetListener implements Runnable, PhysicsObserver {
 			try {
 				wait();
 			} catch(InterruptedException e) {
+				throw new IOException("Liittymisen hyväksymispyyntöjen odotus epäonnistui.");
 			}
 		}
+		if (waitCount < 0)
+			throw new IOException("Peliinliittymispyyntö hylättiin.");
 	}
 
 	/** Vapauttaa kaikki tämän olion ja sen hallitsemien NetPlayer-olioiden
@@ -298,6 +301,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Kertoo, että yksi verkkopelaajista on hyväksynyt paikallisen pelaajan
 	 * liittymisen peliin. Peliin liittyessä kaikkien NetPlayer-olioiden
 	 * odotetaan kutsuvan tätä metodia saatuaan hyväksynnän.
+	 * @param pl pelaaja, jonka etäkoneelta hyväksymisviesti saatiin
 	 */
 	synchronized void gotJoinOK(NetPlayer pl) {
 		physics.addPlayer(pl);
@@ -305,11 +309,21 @@ public class NetListener implements Runnable, PhysicsObserver {
 		--waitCount;
 		notify();
 	}
+	/** Kertoo, että yksi verkkopelaajista on hylännyt paikallisen pelaajan
+	 * liittymispyynnön. Liittymisprosessi keskeytetään epäonnistuneena,
+	 * jos yksikin etäpelaaja kieltää peliin liittymisen.
+	 */
+	synchronized void gotJoinFail() {
+		waitCount = -1;
+		notify();
+	}
 
 	/** Lukee syötevirrasta RGB-värin värikomponentit ja tekee niistä Color-olion.
 	 * Metodi lukee syötevirrasta tasan 3 tavua.
 	 * @param in syötevirta, josta väri luetaan
 	 * @return luettu väri
+	 *
+	 * @throws IOException virrasta luku epäonnistuu
 	 */
 	static Color readColor(DataInputStream in) throws IOException {
 		int r=in.readUnsignedByte(), g=in.readUnsignedByte(), b=in.readUnsignedByte();
@@ -319,6 +333,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Kirjoittaa tulostusvirtaan värin RGB-muodossa kolmena tavuna.
 	 * @param out tulostusvirta, johon värin komponenttien arvot kirjoitetaan
 	 * @param c väri, joka kirjoitetaan tulostusvirtaan
+	 *
+	 * @throws IOException virtaan kirjoitus epäonnistuu
 	 */
 	static void writeColor(DataOutputStream out, Color c) throws IOException {
 		System.out.printf("sending colors: %d %d %d\n", c.getRed(),c.getGreen(),c.getBlue());
@@ -328,6 +344,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 	}
 
 	/** Lähettää kaikille etäpelaajille tiedon paikallisen pelaajan uudelleensyntymästä.
+	 *
+	 * @throws IOException viestin lähetys epäonnistuu
 	 */
 	public void sendSpawn() throws IOException {
 		outBuffer.reset();
@@ -344,6 +362,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Lähettää UDP-paketin kaikille etäpelaajille.
 	 * @param buf taulukko, jonka alusta lähetettävä data luetaan
 	 * @param length lähetettävän viestin pituus
+	 *
+	 * @throws IOException viestin lähetys epäonnistuu
 	 */
 	void sendUDPPacket(byte[] buf, int length) throws IOException {
 		DatagramPacket packet = new DatagramPacket(buf, length);
@@ -358,6 +378,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Lähettää TCP-paketin kaikille etäpelaajille.
 	 * @param buf taulukko, jonka alusta lähetettävä data luetaan
 	 * @param length lähetettävän viestin pituus
+	 *
+	 * @throws IOException viestin lähetys epäonnistuu
 	 */
 	void sendTCPPacket(byte[] buf, int length) throws IOException {
 		for(NetPlayer pl : players) {
@@ -372,6 +394,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Lähettää paikalliset muutokset etäpelaajille.
 	 * Jos pelaaja on hengissä, lähetetään uudet sijaintitiedot.
 	 * Jos pelaaja ampui tai pelaajaan osui ammuksia, lähetetään tiedot näistä.
+	 *
+	 * @throws IOException viestin lähetys epäonnistuu
 	 */
 	public void updateChanges() throws IOException {
 		if (localPlayer.isAlive()) {
