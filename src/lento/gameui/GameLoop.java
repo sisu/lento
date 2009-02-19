@@ -78,62 +78,69 @@ public class GameLoop {
 		long prevTime = System.nanoTime();
 		long nextTime = prevTime;
 		try{
-		while(!done) {
-//			System.out.println("loop");
-			long time = System.nanoTime();
-			float diff = (time-prevTime)/1e9f;
+			while(!done) {
+	//			System.out.println("loop");
+				long time = System.nanoTime();
+				float diff = (time-prevTime)/1e9f;
 
-			if (time/(1000*1000*1000) > prevTime/(1000*1000*1000)) {
-				System.out.println(frame.frameCount+"frames");
-				frame.frameCount=0;
+				if (time/(1000*1000*1000) > prevTime/(1000*1000*1000)) {
+					System.out.println(frame.frameCount+"frames");
+					frame.frameCount=0;
+				}
+
+				boolean spawned = false;
+				if (!localPlayer.isAlive() && time>=localPlayer.spawnTime) {
+					localPlayer.spawn(physics.getGeometry().getSpawnPoint());
+					spawned = true;
+					System.out.println("local spawn!");
+					net.sendSpawn();
+				}
+
+				boolean alive = localPlayer.isAlive();
+
+				physics.update(diff, localPlayer);
+
+				if (alive && !localPlayer.isAlive()) {
+					// kuoltiin framen aikana
+					localPlayer.spawnTime = time + LocalPlayer.SPAWN_TIME;
+				}
+
+				// ampumisesta huolehtiminen
+				if (localPlayer.isAlive() && localPlayer.shooting) {
+					localPlayer.nextShootTime = Math.max(localPlayer.nextShootTime, prevTime);
+
+					int maxShoots = (int)(localPlayer.shootEnergy / LocalPlayer.SHOOT_ENERGY_USE);
+					int count = physics.createLocalBullets(localPlayer, prevTime, time,
+							localPlayer.nextShootTime, localPlayer.nextBulletID, maxShoots);
+	//				if (count!=0) System.out.println("cnt "+count);
+					localPlayer.nextBulletID += count;
+					localPlayer.nextShootTime += count*GamePhysics.SHOOT_INTERVAL;
+					localPlayer.shootEnergy -= count*LocalPlayer.SHOOT_ENERGY_USE;
+				}
+				localPlayer.recoverShootEnergy(diff);
+
+				net.updateChanges();
+
+				frame.repaint();
+
+				prevTime = time;
+	//			System.out.println("asd");
+				if (time < nextTime) {
+	//				System.out.println("sleeping: "+(nextTime-time)/1000);
+					Thread.sleep((nextTime-time)/1000000);
+				}
+				nextTime += FRAME_TIME;
+	//			if (false) throw new InterruptedException();
 			}
-
-			boolean spawned = false;
-			if (!localPlayer.isAlive() && time>=localPlayer.spawnTime) {
-				localPlayer.spawn(physics.getGeometry().getSpawnPoint());
-				spawned = true;
-				System.out.println("local spawn!");
-				net.sendSpawn();
-			}
-
-			boolean alive = localPlayer.isAlive();
-			physics.update(diff, localPlayer);
-			if (alive && !localPlayer.isAlive()) {
-				localPlayer.spawnTime = time + LocalPlayer.SPAWN_TIME;
-			}
-
-			// ampumisesta huolehtiminen
-			if (localPlayer.isAlive() && localPlayer.shooting) {
-				localPlayer.nextShootTime = Math.max(localPlayer.nextShootTime, prevTime);
-
-				int maxShoots = (int)(localPlayer.shootEnergy / LocalPlayer.SHOOT_ENERGY_USE);
-				int count = physics.createLocalBullets(localPlayer, prevTime, time, localPlayer.nextShootTime, localPlayer.nextBulletID, maxShoots);
-//				if (count!=0) System.out.println("cnt "+count);
-				localPlayer.nextBulletID += count;
-				localPlayer.nextShootTime += count*GamePhysics.SHOOT_INTERVAL;
-				localPlayer.shootEnergy -= count*LocalPlayer.SHOOT_ENERGY_USE;
-			}
-			localPlayer.recoverShootEnergy(diff);
-
-			net.updateChanges();
-
-			frame.repaint();
-
-			prevTime = time;
-//			System.out.println("asd");
-			if (time < nextTime) {
-//				System.out.println("sleeping: "+(nextTime-time)/1000);
-				Thread.sleep((nextTime-time)/1000000);
-			}
-			nextTime += FRAME_TIME;
-//			if (false) throw new InterruptedException();
-		}
 		}catch(InterruptedException e){
 			// FIXME: tee jotain?
+		} finally {
+			try {
+				net.cleanUp();
+			} catch(IOException e) {
+				// poikkeusta ei tarvitse käsitellä; ei suurta väliä saatiinko kaikki suljettua
+			}
+			frame.setVisible(false);
 		}
-
-		net.cleanUp();
-
-		frame.setVisible(false);
 	}
 }

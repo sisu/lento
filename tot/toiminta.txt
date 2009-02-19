@@ -13,5 +13,14 @@ Pakettien välisiä riippuvuuksia kuvaa seuraava kaavio:
 <insert kaavio here>
 
 
+! Pelin fysiikasta huolehtiminen:
+
+Pelin fysiikan kannalta keskeisin luokka on lento.gamestate.GamePhysics, joka sitoo muita fysiikkaluokkia yhteen ja huolehtii niiden välisistä vuorovaikutuksista. GamePhysics pitää kirjaa kaikista pelin pelaajista, ilmassa olevista ammuksista ja pelialueen geometriasta.
+
+GamePhysics-oliossa pelaajajien ja ammusten tiedot on tallennettu ArrayList-tietorakenteisiin players ja bullets. Lisäksi on pelaajien ja ammusten hakemiseen on kaksi näiden taulukoiden indeksejä sisältävää taulukkoa: int[] playerIndex ja int[][] bulletIndex. playerIndex-taulukossa pelaaja-ID:n mukaan pelaajien indeksit players-taulukossa, ja vastaavasti bulletIndex-taulukossa pelaaja-ID:n ja ammus-ID:n mukaan ammusten indeksit bullets-taulukossa. Nämä aputaulukot mahdollistavat ammuksen tai pelaajan haun O(1)-ajassa.
+
+Myös ammuksen tai pelaajan poisto onnistuu O(1)-ajassa. Players- ja bullets-taulukoita käytetään vain kaikkien alkioiden läpikäyntiin, joten niiden järjestys saa olla mielivaltainen, joten alkio voidaan poistaa taulukon keskeltä kopioimalla viimeinen alkio sen päälle, ja lyhentämällä taulukon kokoa yhdellä. Tällöin on vain huolehdittava aina, että playerIndex- tai bulletIndex-taulukko tulee samalla päivitetyksi.
+
+
 Kommunikaatio verkossa:
 

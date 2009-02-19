@@ -502,22 +502,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 			e.printStackTrace();
 		}
 	}
-	// PhysicsObserver-rajapinta
+	// PhysicsObserver-rajapinta loppuu
 
-	/** Poistaa ammuksen pelistä ja kasvattaa ampujan osumatilastoja.
-	 * @param shooter ampujan pelaaja-ID
-	 * @param id ammuksen ID
-	 * @param selfHit tosi, joss ammus osui ampujaan itseensä
-	 */
-	void addRemoteHit(int shooter, int id, boolean selfHit) {
-		if (!selfHit) {
-			Player pl = physics.getPlayer(shooter);
-			if (pl!=null)
-				pl.addHitDone();
-		}
-		physics.deleteBullet(shooter, id);
-	}
-	
 	/** Generoi vapaan pelaaja-ID:n.
 	 * @return väliltä 0-127 oleva numero, joka ei ole minkään pelaajan käytössä
 	 */

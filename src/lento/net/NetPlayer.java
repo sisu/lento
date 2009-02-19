@@ -406,7 +406,7 @@ class NetPlayer extends Player implements Runnable {
 		for(int i=0; i<count; ++i) {
 			int shooter = in.readUnsignedByte();
 			int bulletID = in.readUnsignedShort();
-			listener.addRemoteHit(shooter,bulletID,shooter==id);
+			listener.physics.deleteBullet(shooter,bulletID,shooter==id);
 		}
 	}
 };

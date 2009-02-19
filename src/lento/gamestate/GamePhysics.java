@@ -45,6 +45,7 @@ public class GamePhysics {
 	 * Jos ammuksen x ampujan ID on a ja ammus-ID b, niin pätee:
 	 * bulletIndex[a][b] = x.
 	 */
+	// FIXME
 	int[][] bulletIndex = new int[256][65536];
 
 	/** Pelifysiikan tapahtumia tarkkailemaan asetettu olio. */
@@ -123,6 +124,11 @@ public class GamePhysics {
 		}
 	}
 
+	/** Määrittää pelaajan uuden sijainnin ja nopeusvektorin törmäyksen jälkeen.
+	 * Uudet tiedot tallennetaan suoraan parametrina annettuun pelaaja-olioon.
+	 * @param pl seinään törmännyt pelaaja
+	 * @param coll tapahtunut törmäys
+	 */
 	private void handleReflection(Player pl, Collision coll) {
 		Point2D.Float speed = pl.speedVec;
 		Point2D.Float normal = coll.getNormal();
@@ -163,16 +169,18 @@ public class GamePhysics {
 		pl.prevLocation.y = loc.y+speed.y*eps;
 	}
 
+	/** Poistaa ammuksen bullets-taulukon indeksin perusteella.
+	 * @param i poistettavan ammuksen indeksi bullets-taulukossa
+	 */
 	private void deleteBullet(int i) {
+		// Siirretään taulukon viimeinen alkio poistettavan tilalle
 		int size = bullets.size();
 		if (i>=size) return;
 		Bullet last = bullets.get(size-1);
 		bullets.set(i, last);
 		bullets.remove(size-1);
 
-		Player pl = getPlayer(last.getShooter());
-		if (pl!=null)
-			bulletIndex[pl.id][last.getID()] = i;
+		bulletIndex[last.getShooter()][last.getID()] = i;
 	}
 	public synchronized void deleteBullet(Bullet b) {
 		Player pl = players.get(playerIndex[b.getShooter()]);
@@ -315,16 +323,22 @@ public class GamePhysics {
 		int num = playerIndex[id];
 		if (num >= players.size())
 			return null;
-		Player pl = players.get(playerIndex[id]);
+		Player pl = players.get(num);
 		if (pl.id != id)
 			return null;
 		return pl;
 	}
-	/** Poistaa ammuksen pelistä.
+	/** Poistaa ammuksen pelistä ja päivittää ampujan osumatilastot.
 	 * @param shooter ammuksen ampujan pelaaja-ID
 	 * @param id ammuksen ID
+	 * @param selfHit tosi, joss ampuja osui itseensä
 	 */
-	public synchronized void deleteBullet(int shooter, int id) {
+	public synchronized void deleteBullet(int shooter, int id, boolean selfHit) {
+		if (!selfHit) {
+			Player pl = getPlayer(id);
+			if (pl!=null)
+				pl.addHitDone();
+		}
 		int idx = bulletIndex[shooter][id];
 		deleteBullet(idx);
 	}
