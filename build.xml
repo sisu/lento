@@ -33,16 +33,12 @@
 			<classpath>
 				<pathelement path="./classes"/>
 				<pathelement path="./tclasses"/>
-				<pathelement location="/usr/lib/junit.jar"/>
 			</classpath>
-			<test name="lento.gamestate.TestGeom"/>
-			<!--
 			<batchtest>
-				<fileset dir="tclasses">
+				<fileset dir="test">
 					<include name="lento/"/>
 				</fileset>
 			</batchtest>
-			-->
 		</junit>
 	</target>
 </project>
