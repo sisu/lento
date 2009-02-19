@@ -2,13 +2,14 @@
 <project name="Lento" default="compile">
 	<target name="clean" description="remove intermediate files">
 		<delete dir="classes"/>
+		<delete dir="tclasses"/>
 	</target>
 	<target name="clobber" depends="clean" description="remove all artifact files">
 		<delete file="lento.jar"/>
 	</target>
 	<target name="compile" description="compile the Java source code to class files">
 		<mkdir dir="classes"/>
-		<javac srcdir="src" destdir="classes" debug="on" excludes="lento/*/Test*.java" target="1.6"/>
+		<javac srcdir="src" destdir="classes" debug="on"/>
 	</target>
 	<target name="jar" depends="compile" description="create a Jar file for the application">
 		<jar destfile="lento.jar">
@@ -24,15 +25,24 @@
 	</target>
 
 	<target name="test-compile" depends="compile">
-		<javac srcdir="src" destdir="classes" debug="on" includes="lento/*/Test*.java"/>
+		<mkdir dir="tclasses"/>
+		<javac srcdir="test" destdir="tclasses" debug="on" sourcepath="./src/"/>
 	</target>
 	<target name="test" depends="test-compile">
 		<junit haltonfailure="true" printsummary="true" showoutput="true">
+			<classpath>
+				<pathelement path="./classes"/>
+				<pathelement path="./tclasses"/>
+				<pathelement location="/usr/lib/junit.jar"/>
+			</classpath>
+			<test name="lento.gamestate.TestGeom"/>
+			<!--
 			<batchtest>
-				<fileset dir="test">
-					<include name="*.java"/>
+				<fileset dir="tclasses">
+					<include name="lento/"/>
 				</fileset>
 			</batchtest>
+			-->
 		</junit>
 	</target>
 </project>
