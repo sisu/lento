@@ -211,21 +211,24 @@ public class GamePhysics {
 		int count=0;
 		while(count < maxCount && nextShootTime < curTime) {
 
-			float td = (float)(nextShootTime-prevTime)/tDiff;
-			float locX = td*player.location.x + (1-td)*player.prevLocation.x;
-			float locY = td*player.location.y + (1-td)*player.prevLocation.y;
+			float locX = player.location.x;
+			float locY = player.location.y;
+
 			float sa = (float)Math.sin(player.angle);
 			float ca = (float)Math.cos(player.angle);
 			locX += ca*(BULLET_HIT_RANGE*2);
 			locY -= sa*(BULLET_HIT_RANGE*2);
+
 			float vx = ca*BULLET_SPEED + player.speedVec.x;
 			float vy = -sa*BULLET_SPEED + player.speedVec.y;
-
-			assert(td>=0 && td<=1);
 
 //			System.out.printf("muu %f %f ; %f %f (%f %f) (%f ; %f)\n", locX,locY,vx,vy, player.location.x, player.location.y, td, (1-td)*tDiff/1e9f);
 			Bullet b = new Bullet(locX,locY,vx,vy,player.id,nextID+count);
 			++count;
+
+			// lasketaan muuttujaan td missä kohtaa framen aikana ammus ammuttiin
+			// td=0 -> framen alussa; td=1 -> framen lopussa
+			float td = (float)(nextShootTime-prevTime)/tDiff;
 			b.update((1-td)*tDiff/1e9f);
 			addBullet(b);
 
