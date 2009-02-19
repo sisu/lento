@@ -46,12 +46,6 @@ public class Player {
 	/** Pelaajan jäljellä olevat osumapisteet. */
 	int health;
 
-	// FIXME: siirrä GamePhysics-luokkaan?
-	/** Taulukko siitä, missä indeksissä mikäkin tämän pelaajan ampuma 
-	 * ammus sijaitsee GamePhysics-olion taulukossa.
-	 */
-	int[] bulletIndex = new int[65536];
-
 	/** Päivittää pelaajan sijainnin ja nopeusvektorin, ja sijoittaa edellisen sijainnin
 	 * prevLocation-muuttujaan. Tämä metodi ei tarkista mitään törmäyksiä, vaan olettaa
 	 * pelaajan lentävän tyhjässä tilassa.

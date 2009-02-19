@@ -40,6 +40,13 @@ public class GamePhysics {
 	 */
 	private int[] playerIndex = new int[256];
 
+	/** Taulukko siitä, missä indeksissä mikäkin kunkin pelaajan ampuma 
+	 * ammus sijaitsee bullets-taulukossa.
+	 * Jos ammuksen x ampujan ID on a ja ammus-ID b, niin pätee:
+	 * bulletIndex[a][b] = x.
+	 */
+	int[][] bulletIndex = new int[256][65536];
+
 	/** Pelifysiikan tapahtumia tarkkailemaan asetettu olio. */
 	PhysicsObserver observer;
 
@@ -165,11 +172,11 @@ public class GamePhysics {
 
 		Player pl = getPlayer(last.getShooter());
 		if (pl!=null)
-			pl.bulletIndex[last.getID()] = i;
+			bulletIndex[pl.id][last.getID()] = i;
 	}
 	public synchronized void deleteBullet(Bullet b) {
 		Player pl = players.get(playerIndex[b.getShooter()]);
-		deleteBullet(pl.bulletIndex[b.getID()]);
+		deleteBullet(bulletIndex[pl.id][b.getID()]);
 	}
 
 	/** Lisää pelaajan pelaajien listaan.
@@ -184,7 +191,7 @@ public class GamePhysics {
 	 */
 	public synchronized void addBullet(Bullet b) {
 		Player pl = players.get(playerIndex[b.getShooter()]);
-		pl.bulletIndex[b.getID()] = bullets.size();
+		bulletIndex[pl.id][b.getID()] = bullets.size();
 		bullets.add(b);
 	}
 
@@ -291,10 +298,7 @@ public class GamePhysics {
 	 * @return null, jos mikään ammus ei vastaa annettuja tietoja
 	 */
 	public Bullet getBullet(int shooter, int id) {
-		Player pl = players.get(playerIndex[shooter]);
-		if (pl==null)
-			return null;
-		int idx = pl.bulletIndex[id];
+		int idx = bulletIndex[shooter][id];
 		if (idx >= bullets.size())
 			return null;
 		return bullets.get(idx);
@@ -318,10 +322,7 @@ public class GamePhysics {
 	 * @param id ammuksen ID
 	 */
 	public synchronized void deleteBullet(int shooter, int id) {
-		Player pl = players.get(playerIndex[shooter]);
-		if (pl==null || pl.id!=shooter)
-			return; // ei ole virhe, pelaaja on voinut poistua ammuttuaan.
-		int idx = pl.bulletIndex[id];
+		int idx = bulletIndex[shooter][id];
 		deleteBullet(idx);
 	}
 };

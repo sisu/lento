@@ -8,7 +8,7 @@
 	</target>
 	<target name="compile" description="compile the Java source code to class files">
 		<mkdir dir="classes"/>
-		<javac srcdir="src" destdir="classes" debug="on" excludes="lento/*/Test*.java"/>
+		<javac srcdir="src" destdir="classes" debug="on" excludes="lento/*/Test*.java" target="1.6"/>
 	</target>
 	<target name="jar" depends="compile" description="create a Jar file for the application">
 		<jar destfile="lento.jar">
