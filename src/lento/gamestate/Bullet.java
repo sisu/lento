@@ -26,9 +26,12 @@ public class Bullet {
 	 */
 	Point2D.Float update(float time) {
 		float oldSpeedY = speedVec.y;
+		// v = v0 + a*t
 		speedVec.y += time*GamePhysics.GRAVITY;
 
 		Point2D.Float oldLoc = location;
+		// x-suuntainen nopeus on vakio
+		// y-suuntainen nopeus kasvaa tasaisesti, eli y = y0 + t*(v0+v)/2
 		location = new Point2D.Float(oldLoc.x + speedVec.x*time, oldLoc.y + .5f*(oldSpeedY+speedVec.y)*time);
 		return oldLoc;
 	}

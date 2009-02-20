@@ -16,8 +16,7 @@ class Collision {
 	private Point2D.Float location;
 
 	/** Pinnan, johon törmättiin, normaalivektori.
-	 * Tämä on aina yksikkövektori.
-	 */
+	 * Tämä on aina yksikkövektori. */
 	private Point2D.Float normal;
 
 	/** Luo tiedon uudesta törmäyksestä.

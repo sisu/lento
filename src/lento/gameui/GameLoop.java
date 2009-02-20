@@ -86,8 +86,9 @@ public class GameLoop {
 
 		Sequencer midiSeq=null;
 		try {
+			File f = new File("music.mid");
 			midiSeq = MidiSystem.getSequencer();
-			midiSeq.setSequence(MidiSystem.getSequence(new File("music.mid")));
+			midiSeq.setSequence(MidiSystem.getSequence(f));
 			midiSeq.open();
 			midiSeq.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
 			midiSeq.start();

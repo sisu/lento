@@ -46,6 +46,8 @@ public class AreaGeometry {
 	 * @return null, jos jana (a,b) ei leikkaa mitään kentän esteistä eikä kentän reunaa
 	 */
 	Collision getCollision(Point2D.Float a, Point2D.Float b) {
+		if (a==null || b==null)
+			throw new IllegalArgumentException("Annetun janan kärkipiste null");
 //		System.out.printf("testing: %f %f - %f %f\n", a.x,a.y,b.x,b.y);
 		Collision res=null;
 		for(Edge e : edges) {
@@ -219,7 +221,7 @@ public class AreaGeometry {
 	private void addEdge(int x1, int y1, int x2, int y2, int direction) {
 		int nx = (y1-y2)*direction;
 		int ny = (x2-x1)*direction;
-		System.out.printf("adding edge: %d %d - %d %d ; %d %d\n", x1,y1,x2,y2,nx,ny);
+//		System.out.printf("adding edge: %d %d - %d %d ; %d %d\n", x1,y1,x2,y2,nx,ny);
 		edges.add(new Edge(x1,y1,x2,y2,nx,ny));
 	}
 
@@ -245,8 +247,12 @@ public class AreaGeometry {
 	/** Poistaa kentällä olevat esteet ja asettaa uuden koon kentälle.
 	 * @param w kentän uusi leveys
 	 * @param h kentän uusi korkeus
+	 *
+	 * @throws IllegalArgumentException <code>w<=0</code> tai <code>h<=0</code>
 	 */
 	public void resetArea(int w, int h) {
+		if (w<=0 || h<=0)
+			throw new IllegalArgumentException("Alueen koon oltava positiivinen");
 		edges.clear();
 		polygons.clear();
 		setSize(w,h);
@@ -265,14 +271,24 @@ public class AreaGeometry {
 	}
 	/** Asettaa reunojen värin.
 	 * @param c uusi reunaväri
+	 *
+	 * @throws IllegalArgumentException c on null
 	 */
 	public void setBorderColor(Color c) {
+		if (c==null)
+			throw new IllegalArgumentException("Väri ei saa olla null");
 		borderColor = c;
 	}
 	/** Lisää polygonin alueen esteisiin.
 	 * @param poly lisättävä polygoni
+	 *
+	 * @throws IllegalArgumentException poly on null
 	 */
 	public void addPolygon(ColoredPolygon poly) {
+		if (poly==null)
+			throw new IllegalArgumentException("Polygoni ei saa olla null");
+		if (poly.npoints < 3)
+			throw new IllegalArgumentException("Polygonissa on oltava vähintään 3 kulmaa");
 		polygons.add(poly);
 		addEdges(poly);
 	}

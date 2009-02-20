@@ -4,20 +4,22 @@ import org.junit.*;
 import static org.junit.Assert.*;
 import java.io.*;
 import java.awt.geom.*;
+import java.awt.*;
 
 public class TestGeom {
+
+	/** Yrittää antaa null-viitteen tiedostoparametrina AreaGeometryn konstruktorille.
+	 * Tästä pitäisi seurata poikkeus.
+	 */
+	@Test(expected=Exception.class) public void nullFileLoad() throws IOException {
+		new AreaGeometry(null);
+	}
+	// FIXME: tee paremmin?
 	@Test public void fileLoadTest() {
 		AreaGeometry geom;
-		// Yritetään antaa tyhjä tiedosto AreaGeometrylle
-		try {
-			geom = new AreaGeometry(null);
-			assertTrue("AreaGeometryn konstruktori hyväksyi null-viitteen.", false);
-		} catch(Exception e) {
-			assertTrue("ok, poikkeus", true);
-		}
 		// Yritetään antaa eri rikkinäisiä tiedostoja AreaGeometrylle
 		for(int i=1; i<=3; ++i) {
-			File f = new File("../test/broken"+i+".lev");
+			File f = new File("./testfiles/broken"+i+".lev");
 			try {
 				geom = new AreaGeometry(f);
 				assertTrue("AreaGeometryn konstruktori hyväksyi rikkinäisen tiedoston "+i, false);
@@ -26,23 +28,23 @@ public class TestGeom {
 			}
 		}
 	}
-/*	@Test public void collisionTest() {
+	/** Yrittää antaa null-viitteen getCollision-metodin parametriksi.
+	 */
+	@Test(expected=Exception.class) public void nullCollision() {
+		AreaGeometry geom = new AreaGeometry();
+		geom.getCollision(null,null);
+	}
+
+	/** Luo pelialueen, ja testaa törmäysten tunnistusta.
+	 */
+	@Test public void collisionTest() {
 		AreaGeometry geom = null;
 		try {
-			File f = new File("../test/test1.lev");
-//			geom = new AreaGeometry(new File("lento/test/test1.lev"));
+			File f = new File("./testfiles/test1.lev");
 			geom = new AreaGeometry(f);
-		} catch(Exception e) {
+		} catch(IOException e) {
 			String curDir = System.getProperty("user.dir");
 			assertTrue("Testikenttätiedoston lataus epäonnistui: "+curDir, false);
-		}
-
-		// testaa törmäystarkistusta null-viitteellä
-		try {
-			geom.getCollision(null,null);
-			assertTrue("getCollision hyväksyi null-viitteen.", false);
-		} catch(Exception e) {
-			assertTrue("ok, poikkeus", true);
 		}
 
 		Point2D.Float a=new Point2D.Float(), b=new Point2D.Float();
@@ -59,9 +61,48 @@ public class TestGeom {
 		coll = geom.getCollision(a,b);
 		assertNotNull(coll);
 	}
-*/	@Test public void createTest() {
+	/** Luo pelialueen ja lisää sinne polygonin. */
+	@Test public void validCreateTest() {
 		AreaGeometry geom = new AreaGeometry();
 		geom.resetArea(1000, 1000);
-	}
 
+		ColoredPolygon p = new ColoredPolygon();
+		p.addPoint(10, 10);
+		p.addPoint(200, -10);
+		p.addPoint(200, 100);
+
+		geom.addPolygon(p);
+
+		// Varmista, että ainoastaan annettu polygoni on mukana polygonilistassa
+		assertEquals(geom.getPolygons().size(), 1);
+		assertTrue(geom.getPolygons().get(0).equals(p));
+	}
+	/** Yrittää antaa null-viitteen reunan väriksi. */
+	@Test(expected=IllegalArgumentException.class) public void nullColorTest() {
+		AreaGeometry geom = new AreaGeometry();
+		geom.setBorderColor(null);
+	}
+	/** Yrittää antaa null-viitteen polygoniksi. */
+	@Test(expected=IllegalArgumentException.class) public void nullPolyTest() {
+		AreaGeometry geom = new AreaGeometry();
+		geom.addPolygon(null);
+	}
+	/** Yrittää tehdä pelialueen koosta negatiivisen. */
+	@Test(expected=IllegalArgumentException.class) public void negativeSizeCreateTest() {
+		AreaGeometry geom = new AreaGeometry();
+		// Yritetään tehdä -100x100-kokoinen pelialue
+		geom.resetArea(-100,100);
+	}
+	/** Yrittää lisätä pelialueeseen monikulmion jossa on alle kolme kulmaa. */
+	@Test(expected=IllegalArgumentException.class) public void tooLittlePolygonEdges() {
+		AreaGeometry geom = new AreaGeometry();
+		geom.resetArea(1000,1000);
+
+		ColoredPolygon p = new ColoredPolygon();
+		p.addPoint(10,10);
+		p.addPoint(20,20);
+
+		// yritetään lisätä polygoni, jossa on vain 2 pistettä
+		geom.addPolygon(p);
+	}
 }
