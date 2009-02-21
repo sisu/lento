@@ -16,9 +16,9 @@ public class Bullet {
 	Point2D.Float speedVec;
 
 	/** Ampujan pelaaja-ID */
-	short shooter;
+	int shooter;
 	/** Ammuksen ID */
-	short id;
+	int id;
 
 	/** Päivittää ammuksen sijainnin ja nopeusvektorin.
 	 * @param time edellisen ja nykyisen framen välillä kulunut aika sekunteina
@@ -66,13 +66,13 @@ public class Bullet {
 	/** Palauttaa ammuksen ID-numeron.
 	 * @return ammuksen ID-numero
 	 */
-	public short getID() {
+	public int getID() {
 		return id;
 	}
 	/** Palauttaa ammuksen ampujan pelaaja-ID:n.
 	 * @return ampujan pelaaja-ID
 	 */
-	public short getShooter() {
+	public int getShooter() {
 		return shooter;
 	}
 }

@@ -157,6 +157,8 @@ public class AreaGeometry {
 			setSize(sizeW,sizeH);
 		} catch(NumberFormatException e) {
 			readError(file,lineCount,"Virheellinen numeroformaatti: "+e.getMessage());
+		} finally {
+			reader.close();
 		}
 		if (sizeW==0) {
 			readError(file,lineCount,"Kentän kokoa ei määritetty tiedostossa.");

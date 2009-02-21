@@ -55,9 +55,9 @@ public class MenuFrame extends JFrame implements ActionListener {
 			loop=null;
 			String name=playerInfo.nameField.getText();
 			if (name.isEmpty())
-				throw new Exception("Pelaajanimi puuttuu");
+				throw new Exception("Pelaajanimi puuttuu.");
 			if (name.length() > 32)
-				throw new Exception("Pelaajanimi liian pitkä (max. 32 merkkiä)");
+				throw new Exception("Pelaajanimi liian pitkä (max. 32 merkkiä).");
 
 			Color color = playerInfo.color;
 
@@ -66,14 +66,20 @@ public class MenuFrame extends JFrame implements ActionListener {
 			} else if (action.equals("join")) {
 				String addrName = join.hostField.getText();
 				if (addrName.isEmpty())
-					throw new Exception("Verkko-osoite annettava");
+					throw new Exception("Verkko-osoite puuttuu.");
 
 				InetAddress addr = InetAddress.getByName(addrName);
+
+				String portString = join.portField.getText();
+				if (portString.isEmpty())
+					throw new Exception("Porttinumero puuttuu.");
 				int port = Integer.parseInt(join.portField.getText());
 				loop = new GameLoop(addr,port,name,color);
 			}
 		} catch(UnknownHostException e) {
-			JOptionPane.showMessageDialog(null, "Virheellinen verkko-osoite");
+			JOptionPane.showMessageDialog(null, "Virheellinen verkko-osoite.");
+		} catch(NumberFormatException e) {
+			JOptionPane.showMessageDialog(null, "Virheellinen porttinumero.");
 		} catch(Exception e) {
 			// FIXME: näytä joku ruma dialogi
 			String msg = e.getMessage();
