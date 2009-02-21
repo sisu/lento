@@ -37,9 +37,6 @@ public class GameLoop {
 	/** Yhteen frameen minimissään käytettävä aika nanosekunteina. */
 	private static final long FRAME_TIME = (long)1e9 / MAX_FPS;
 
-	/** TODO */
-	Sequencer midiSeq;
-
 	/** Luo uuden pelin yhdistämättä keneenkään muuhun.
 	 * @param file tiedosto, josta pelialueen tiedot luetaan
 	 * @param name paikallisen pelaajan nimi
@@ -83,18 +80,6 @@ public class GameLoop {
 		frame.addKeyListener(localPlayer);
 
 		new Thread(net).start();
-
-		Sequencer midiSeq=null;
-		try {
-			File f = new File("music.mid");
-			midiSeq = MidiSystem.getSequencer();
-			midiSeq.setSequence(MidiSystem.getSequence(f));
-			midiSeq.open();
-			midiSeq.setLoopCount(Sequencer.LOOP_CONTINUOUSLY);
-			midiSeq.start();
-		} catch(Exception e) {
-			System.out.println("Warning: playing music failed: "+e.getMessage());
-		}
 
 		System.out.println("starting game loop");
 
@@ -164,11 +149,6 @@ public class GameLoop {
 				// poikkeusta ei tarvitse käsitellä; ei suurta väliä saatiinko kaikki suljettua
 			}
 			frame.setVisible(false);
-
-			if (midiSeq!=null) {
-				midiSeq.stop();
-				midiSeq.close();
-			}
 		}
 	}
 }
