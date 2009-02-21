@@ -121,8 +121,8 @@ class NetPlayer extends Player implements Runnable {
 			NetListener.writeColor(out, p.color);
 
 			for(int j=0; j<p.npoints; ++j) {
-				out.writeFloat(p.xpoints[j]);
-				out.writeFloat(p.ypoints[j]);
+				out.writeInt(p.xpoints[j]);
+				out.writeInt(p.ypoints[j]);
 			}
 		}
 		out.flush();

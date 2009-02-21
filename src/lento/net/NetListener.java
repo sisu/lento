@@ -233,8 +233,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 			ColoredPolygon poly = new ColoredPolygon();
 			poly.color = readColor(in);
 			for(int j=0; j<count; ++j) {
-				float x=in.readFloat(), y=in.readFloat();
-				poly.addPoint((int)x,(int)y);
+				int x=in.readInt(), y=in.readInt();
+				poly.addPoint(x,y);
 			}
 			geom.addPolygon(poly);
 		}
