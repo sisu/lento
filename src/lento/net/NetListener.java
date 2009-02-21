@@ -261,7 +261,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 		for(int i=0; i<count-1; ++i) {
 			NetPlayer pl = new NetPlayer(in, this);
 			players.add(pl);
-			playerTable.put(getSocketAddress(pl), pl);
 		}
 	}
 
@@ -292,8 +291,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * @param pl pelaaja, jonka etäkoneelta hyväksymisviesti saatiin
 	 */
 	synchronized void gotJoinOK(NetPlayer pl) {
-		physics.addPlayer(pl);
-		playerTable.put(getSocketAddress(pl), pl);
+		playerJoined(pl);
 		--waitCount;
 		notify();
 	}
