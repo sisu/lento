@@ -56,6 +56,8 @@ public class MenuFrame extends JFrame implements ActionListener {
 			String name=playerInfo.nameField.getText();
 			if (name.isEmpty())
 				throw new Exception("Pelaajanimi puuttuu");
+			if (name.length() > 32)
+				throw new Exception("Pelaajanimi liian pitkä (max. 32 merkkiä)");
 
 			Color color = playerInfo.color;
 

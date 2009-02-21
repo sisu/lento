@@ -109,14 +109,13 @@ public class NetListener implements Runnable, PhysicsObserver {
 		if (!socket.isConnected())
 			throw new IOException("Yhteyden muodostus etäkoneeseen epäonnistui");
 
-		System.out.println("jee saatiin socket.");
 		return handleOwnJoin(socket);
 	}
 
 	/** Luo ja avaa uuden TCP-socketin. Metodi yrittää ensin
 	 * porttia DEFAULT_TCP_PORT, ja jos se ei ole käytettävissä,
 	 * yritetään aina seuraavaa porttia kunnes vapaa portti löytyy.
-	 * @return ServerSocket, johon muut voivat yhdistää.
+	 * @return avoin ServerSocket, johon muut voivat yhdistää.
 	 */
 	private ServerSocket openServerSocket() throws IOException {
 		ServerSocket s;
@@ -130,7 +129,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 				++port;
 			}
 		} while(s==null);
-		System.out.println("Binded to port "+port);
+		System.out.println("Odotetaan TCP-yhteyksiä porttiin "+port);
 		return s;
 	}
 
@@ -149,9 +148,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 				players.add(pl);
 				new Thread(pl).start();
 			}
-		} catch(SocketException e) {
+		} catch(Exception e) {
 			done = true;
-		} catch(IOException e) {
 			e.printStackTrace();
 		}
 	}
@@ -288,19 +286,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 			throw new IOException("Peliinliittymispyyntö hylättiin.");
 	}
 
-	/** Vapauttaa kaikki tämän olion ja sen hallitsemien NetPlayer-olioiden
-	 * käytössä olevat resurssit.
-	 */
-	public void cleanUp() throws IOException {
-		done = true;
-		tcpSocket.close();
-		udpSocket.close();
-		for(Iterator<NetPlayer> i=players.iterator(); i.hasNext(); ) {
-			NetPlayer pl = i.next();
-			pl.socket.close();
-		}
-	}
-
 	/** Kertoo, että yksi verkkopelaajista on hyväksynyt paikallisen pelaajan
 	 * liittymisen peliin. Peliin liittyessä kaikkien NetPlayer-olioiden
 	 * odotetaan kutsuvan tätä metodia saatuaan hyväksynnän.
@@ -321,6 +306,19 @@ public class NetListener implements Runnable, PhysicsObserver {
 		notify();
 	}
 
+	/** Vapauttaa kaikki tämän olion ja sen hallitsemien NetPlayer-olioiden
+	 * käytössä olevat resurssit.
+	 */
+	public void cleanUp() throws IOException {
+		done = true;
+		tcpSocket.close();
+		udpSocket.close();
+		for(Iterator<NetPlayer> i=players.iterator(); i.hasNext(); ) {
+			NetPlayer pl = i.next();
+			pl.socket.close();
+		}
+	}
+
 	/** Lukee syötevirrasta RGB-värin värikomponentit ja tekee niistä Color-olion.
 	 * Metodi lukee syötevirrasta tasan 3 tavua.
 	 * @param in syötevirta, josta väri luetaan
@@ -330,7 +328,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 */
 	static Color readColor(DataInputStream in) throws IOException {
 		int r=in.readUnsignedByte(), g=in.readUnsignedByte(), b=in.readUnsignedByte();
-		System.out.printf("Got color: %d %d %d\n", r,g,b);
+//		System.out.printf("Got color: %d %d %d\n", r,g,b);
 		return new Color(r,g,b);
 	}
 	/** Kirjoittaa tulostusvirtaan värin RGB-muodossa kolmena tavuna.
@@ -340,7 +338,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * @throws IOException virtaan kirjoitus epäonnistuu
 	 */
 	static void writeColor(DataOutputStream out, Color c) throws IOException {
-		System.out.printf("sending colors: %d %d %d\n", c.getRed(),c.getGreen(),c.getBlue());
+//		System.out.printf("sending colors: %d %d %d\n", c.getRed(),c.getGreen(),c.getBlue());
 		out.write(c.getRed());
 		out.write(c.getGreen());
 		out.write(c.getBlue());
@@ -401,6 +399,12 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * @throws IOException viestin lähetys epäonnistuu
 	 */
 	public void updateChanges() throws IOException {
+
+		if (done) {
+			// Metodia kutsuttiin, vaikka yhteyksien kuuntelu on lopetettu
+			throw new IOException("Verkko-socket sulkeutui odottamattomasti");
+		}
+
 		if (localPlayer.isAlive()) {
 			// lähetä uusi sijainti
 			outBuffer.reset();
@@ -511,6 +515,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * @return väliltä 0-127 oleva numero, joka ei ole minkään pelaajan käytössä
 	 */
 	private int genID() {
+		// FIXME: tee paremmin
 		int id=0;
 		boolean ok;
 		do {

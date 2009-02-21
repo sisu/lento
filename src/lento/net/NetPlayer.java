@@ -72,6 +72,8 @@ class NetPlayer extends Player implements Runnable {
 	/** Huolehtii yhdestä etäkoneelta tulleesta TCP-viestistä.
 	 * @param type viestin tyyppi
 	 * @param in syötevirta, josta voi lukea etäpelaajan lähettämää dataa
+	 *
+	 * @throws IOException syötevirran luku tai viestin lähettäminen epäonnistuu
 	 */
 	private void handleTCPPacket(int type, DataInputStream in) throws IOException {
 		switch(type) {
@@ -103,6 +105,8 @@ class NetPlayer extends Player implements Runnable {
 	}
 
 	/** Lähettää AREA_INFO-paketin etäpelaajalle.
+	 *
+	 * @throws IOException viestin lähettäminen epäonnistuu
 	 */
 	private void sendAreaInfo() throws IOException {
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
@@ -129,6 +133,8 @@ class NetPlayer extends Player implements Runnable {
 	}
 
 	/** Lähettää PLAYER_INFO-paketin etäpelaajalle.
+	 *
+	 * @throws IOException viestin lähettäminen epäonnistuu
 	 */
 	private void sendPlayerInfo() throws IOException {
 		System.out.println("asd");
@@ -155,10 +161,49 @@ class NetPlayer extends Player implements Runnable {
 
 		out.flush();
 	}
+	/** Lähettää yhden etäpelaajan kaikki tiedot osana PLAYER_INFO-pakettia.
+	 * @param out tulostusvirta, jonka kautta viesti välitetään etäkoneelle
+	 * @param p pelaaja, jonka tiedot lähetetään
+	 *
+	 * @throws IOException viestin lähettäminen epäonnistuu
+	 */
+	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
+		out.write(p.socket.getInetAddress().getAddress(), 0, 4);
+//		System.out.printf("sending ports: %d %d\n", p.tcpPort, p.udpPort);
+		out.writeShort(p.tcpPort);
+		out.writeShort(p.udpPort);
+		out.write(p.id);
+		sendSinglePlayerData(out,p);
+	}
+	/** Lähettää yhden pelaajan paikkatiedot osana PLAYER_INFO-pakettia.
+	 * Tämä metodi on erillään sendSinglePlayer-metodista, koska tätä
+	 * voidaan käyttää myös paikallisen pelaajan tietojen lähettämiseen.
+	 * @param out tulostusvirta, jonka kautta viesti välitetään etäkoneelle
+	 * @param p pelaaja, jonka tiedot lähetetään
+	 *
+	 * @throws IOException viestin lähettäminen epäonnistuu
+	 */
+	private void sendSinglePlayerData(DataOutputStream out, Player p) throws IOException {
+		byte[] name = p.getName().getBytes("UTF-8");
+		out.write(name.length);
+		out.write(name, 0, name.length);
+
+		NetListener.writeColor(out,p.getColor());
+
+		int[] stats = p.getStats();
+		assert stats.length==4;
+		for(int s : stats)
+			out.writeInt(s);
+
+		out.write(p.isAlive() ? 1 : 0);
+	}
+
 	/** Lukee etäpelaajan lähettämän REQUEST_JOIN-viestin parametrit.
 	 * Funktio päättää näiden perusteella hyväksytäänkö liittyminen,
 	 * ja lähettää vastauksen.
 	 * @param in syötevirta, josta paketin loppuosa voidaan lukea.
+	 *
+	 * @throws IOException syötevirran luku tai viestin lähettäminen epäonnistuu
 	 */
 	private void handleJoinRequest(DataInputStream in) throws IOException {
 		System.out.println("got join request");
@@ -190,41 +235,11 @@ class NetPlayer extends Player implements Runnable {
 			System.out.println("OK sent "+id);
 		}
 	}
-	/** Lähettää yhden etäpelaajan kaikki tiedot osana PLAYER_INFO-pakettia.
-	 * @param out tulostusvirta, jonka kautta viesti välitetään etäkoneelle
-	 * @param p pelaaja, jonka tiedot lähetetään
-	 */
-	private void sendSinglePlayer(DataOutputStream out, NetPlayer p) throws IOException {
-		out.write(p.socket.getInetAddress().getAddress(), 0, 4);
-		System.out.printf("sending ports: %d %d\n", p.tcpPort, p.udpPort);
-		out.writeShort(p.tcpPort);
-		out.writeShort(p.udpPort);
-		out.write(p.id);
-		sendSinglePlayerData(out,p);
-	}
-	/** Lähettää yhden pelaajan paikkatiedot osana PLAYER_INFO-pakettia.
-	 * Tämä metodi on erillään sendSinglePlayer-metodista, koska tätä
-	 * voidaan käyttää myös paikallisen pelaajan tietojen lähettämiseen.
-	 * @param out tulostusvirta, jonka kautta viesti välitetään etäkoneelle
-	 * @param p pelaaja, jonka tiedot lähetetään
-	 */
-	private void sendSinglePlayerData(DataOutputStream out, Player p) throws IOException {
-		byte[] name = p.getName().getBytes("UTF-8");
-		out.write(name.length);
-		out.write(name, 0, name.length);
-
-		NetListener.writeColor(out,p.getColor());
-
-		int[] stats = p.getStats();
-		assert stats.length==4;
-		for(int s : stats)
-			out.writeInt(s);
-
-		out.write(p.isAlive() ? 1 : 0);
-	}
 
 	/** Käsittelee etäkoneelta tulleen viestin etäpelaajan kuolemasta.
 	 * @param in syötevirta, josta viestin loppuosa voidaan lukea.
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	private void handleDie(DataInputStream in) throws IOException {
 		int killer = in.read();
@@ -233,7 +248,7 @@ class NetPlayer extends Player implements Runnable {
 			pl.addKills();
 
 		int damage = in.readUnsignedShort();
-		System.out.printf("got damage: %d\n", damage);
+//		System.out.printf("got damage: %d\n", damage);
 		damageTaken += damage;
 		deaths++;
 		alive = false;
@@ -242,6 +257,8 @@ class NetPlayer extends Player implements Runnable {
 	/** Luo NetPlayer-olion lukemalla tiedot PLAYER_INFO-paketista.
 	 * @param in syötevirta, josta tämän pelaajan tiedot voidaan lukea
 	 * @param listener tämän pelin etäpelaajista huolehtiva NetListener-olio
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	NetPlayer(DataInputStream in, NetListener listener) throws IOException {
 		this.listener = listener;
@@ -253,6 +270,8 @@ class NetPlayer extends Player implements Runnable {
 	 * @param in syötevirta, josta tämän etäpelaajan tiedot voidaan lukea
 	 * @param listener tämän pelin etäpelaajista huolehtiva NetListener-olio
 	 * @param socket avoin TCP-yhteys tähän etäpelaajaan
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	NetPlayer(DataInputStream in, NetListener listener, Socket socket) throws IOException {
 		this.listener = listener;
@@ -264,6 +283,8 @@ class NetPlayer extends Player implements Runnable {
 	 * Jos tätä kutsuttaessa socket==null, pyrkii yhdistämään paketista
 	 * löytyvään verkko-osoitteeseen, ja muuten jättää osoitteen huomiotta.
 	 * @param in syötevirta, josta tämän etäpelaajan tiedot voidaan lukea
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	private void readInitialData(DataInputStream in) throws IOException {
 		byte[] buf = new byte[4];
@@ -300,6 +321,8 @@ class NetPlayer extends Player implements Runnable {
 	/** Lähettää tälle etäpelaajalle pyynnöt paikallisen pelaajan
 	 * liittymisestä peliin.
 	 * @param localID paikallisen pelaajan pelaaja-ID
+	 *
+	 * @throws IOException viestin lähettäminen epäonnistuu
 	 */
 	void requestJoin(int localID) throws IOException {
 		waitingJoinOK = true;
@@ -324,7 +347,7 @@ class NetPlayer extends Player implements Runnable {
 	/** Käsittelee tältä etäpelaajalta tulleen UDP-paketin.
 	 * @param packet käsiteltävä UDP-paketti
 	 */
-	void handleUDPPacket(DatagramPacket packet) throws IOException {
+	void handleUDPPacket(DatagramPacket packet) {
 		ByteArrayInputStream in = new ByteArrayInputStream(packet.getData(), 0, packet.getLength());
 		int type = in.read();
 //		System.out.println("Paketti: "+type);
@@ -350,6 +373,8 @@ class NetPlayer extends Player implements Runnable {
 
 	/** Lukee PLAYER_STATE-paketista etäpelaajan uuden tilan.
 	 * @param istream syötevirta, josta paketin sisältö voidaan lukea
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	private void updatePlayerState(InputStream istream) throws IOException {
 		DataInputStream in = new DataInputStream(istream);
@@ -368,6 +393,8 @@ class NetPlayer extends Player implements Runnable {
 	/** Käsittelee etäpelaajalta tulleen PLAYER_SPAWN-viestin.
 	 * Kutsuu Player.spawn(float,float)-funktiota saamillaan tiedoilla.
 	 * @param in syötevirta, josta viestin sisältö voidaan lukea
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	private void handleSpawn(DataInputStream in) throws IOException {
 		float x = in.readFloat();
@@ -377,6 +404,8 @@ class NetPlayer extends Player implements Runnable {
 	/** Käsittelee etäpelaajalta tulleen PLAYER_SHOOT-viestin.
 	 * Metodi lisää paketissa tulleet ammukset GamePhysics-oliolle.
 	 * @param istream syötevirta, josta paketin sisältö voidaan lukea
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	private void readBullets(ByteArrayInputStream istream) throws IOException {
 //		System.out.println("jee pateja");
@@ -398,6 +427,8 @@ class NetPlayer extends Player implements Runnable {
 	 * Kutsuu listener.addRemoteHit-metodia huolehtiakseen
 	 * pelistä poistuneista ammuksista.
 	 * @param istream syötevirta, josta paketin sisältö voidaan lukea
+	 *
+	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	private void readHits(ByteArrayInputStream istream) throws IOException {
 		DataInputStream in = new DataInputStream(istream);

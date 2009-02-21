@@ -169,9 +169,9 @@ class GameFrame extends JFrame {
 	/** Nimen vasemmalle puolelle jätettävä tila pistenäytössä */
 	private static final int NAME_LEFT_SPACE = 20;
 	/** Nimikentän koko pikseleinä pistenäytössä */
-	private static final int NAME_FIELD_SIZE = 150;
+	private static final int NAME_FIELD_SIZE = 280;
 	/** Muiden kenttien koko pikseleinä pistenäytössä */
-	private static final int FIELD_W_SIZE = 100;
+	private static final int FIELD_W_SIZE = 80;
 	/** Rivin korkeus pistenäytössä */
 	private static final int FIELD_H_SIZE = 50;
 	/** Paljonko tilaa jätetään kaikkien rivien yläpuolelle pistenäytössä */
