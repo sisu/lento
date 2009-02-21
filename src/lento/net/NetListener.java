@@ -152,8 +152,10 @@ public class NetListener implements Runnable, PhysicsObserver {
 				new Thread(pl).start();
 			}
 		} catch(Exception e) {
-			done = true;
-			e.printStackTrace();
+			if (!done) {
+				done = true;
+				e.printStackTrace();
+			}
 		}
 	}
 	/** Alkaa odottaa UDP-paketteja ja välittää niitä NetPlayer-olioille.

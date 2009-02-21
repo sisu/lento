@@ -15,12 +15,12 @@
 		<jar destfile="lento.jar">
 			<fileset dir="classes" includes="**/*.class"/>
 			<manifest>
-				<attribute name="Main-Class" value="HelloProgram"/>
+				<attribute name="Main-Class" value="lento.menu.MenuFrame"/>
 			</manifest>
 		</jar>
 	</target>
 	<target name="doc" description="create documentation">
-		<javadoc access="private" author="true" version="true" destdir="doc" sourcepath="src">
+		<javadoc access="private" author="true" version="true" destdir="doc" sourcepath="src" docencoding="UTF-8">
 		<package name="lento.*"/>
 		</javadoc>
 	</target>
@@ -44,8 +44,6 @@
 		</junit>
 	</target>
 	<target name="test-doc" description="create test documentation" depends="compile">
-		<javadoc access="private" author="true" version="true" destdir="tdoc" sourcepath="test">
-		<package name="lento.*"/>
-		</javadoc>
+		<javadoc access="private" author="true" version="true" destdir="tdoc" classpath="${java.class.path}:classes" sourcepath="test" />
 	</target>
 </project>
