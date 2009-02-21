@@ -75,14 +75,14 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * lähettämistä etäpelaajille. */
 	private PacketOutputStream outBuffer = new PacketOutputStream(1<<16);
 
-	// FIXME: jos joku ei hyväksykään?
 	/** Tieto, monenko pelaajan hyväksyntää paikallisen pelaajan peliin
 	 * liittymiselle vielä odotetaan, tai -1, jos liittyminen epäonnistui. */
 	private int waitCount=0;
 
 	// FIXME: hajoamiset?
 	/** Tosi, joss paikallinen pelaaja on lopettanut pelin, ja kaikki yhteydet
-	 * voidaan katkaista. */
+	 * voidaan katkaista.
+	 */
 	boolean done=false;
 
 	/** Luo uuden NetPlayer-olion.
@@ -281,7 +281,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			try {
 				wait(JOIN_TIMEOUT);
 			} catch(InterruptedException e) {
-				throw new IOException("Liittymisen hyväksymispyyntöjen odotus epäonnistui.");
+				throw new IOException("Liittymisen hyväksymispyyntöjen odotus aikakatkaistiin.");
 			}
 		}
 		if (waitCount < 0)
@@ -537,19 +537,19 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * @return väliltä 0-127 oleva numero, joka ei ole minkään pelaajan käytössä
 	 */
 	private int genID() {
-		// FIXME: tee paremmin
-		int id=0;
-		boolean ok;
-		do {
-			ok = true;
-			id = (int)(Math.random()*128);
-			for(Player pl : players)
-				if (pl.getID()==id) {
-					ok=false;
-					break;
-				}
-		} while(!ok);
-		return id;
+		// luo listan kaikista mahdollisista ID-numeroista
+		int free=128;
+		int[] arr = new int[free];
+		for(int i=0; i<free; ++i)
+			arr[i] = i;
+
+		// poistaa listasta varatut ID-numerot
+		for(Player pl : players)
+			if (pl.getID() >= 0)
+				arr[pl.getID()] = arr[--free];
+
+		// palauttaa satunnaisen alkion vapaista ID-numeroista
+		return arr[(int)(Math.random()*free)];
 	}
 
 	/** Palauttaa pelaajan UDP-yhteyttä vastaavan InetSocketAddress-olion.

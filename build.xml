@@ -30,12 +30,13 @@
 		<javac srcdir="test" destdir="tclasses" debug="on" sourcepath="./src/"/>
 	</target>
 	<target name="test" depends="test-compile">
-		<junit haltonfailure="true" printsummary="true" showoutput="true">
+		<junit haltonfailure="true" printsummary="withOutAndErr" showoutput="true">
+			<formatter type="plain" usefile="false"/>
 			<classpath>
 				<pathelement path="./classes"/>
 				<pathelement path="./tclasses"/>
 			</classpath>
-			<batchtest>
+			<batchtest todir="testresults">
 				<fileset dir="test">
 					<include name="lento/"/>
 				</fileset>

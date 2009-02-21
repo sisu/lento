@@ -109,11 +109,11 @@ public class Player implements Comparable<Player> {
 	 * @param loc paikka, johon pelaaja syntyy.
 	 */
 	public void spawn(Point2D.Float loc) {
-		System.out.println("spawning to "+loc.x+","+loc.y);
+//		System.out.println("spawning to "+loc.x+","+loc.y);
 		location = loc;
-		prevLocation = new Point2D.Float(loc.x,loc.y);
+		prevLocation = (Point2D.Float)loc.clone();
 		speedVec = new Point2D.Float(0,0);
-		angle = (float)(Math.PI/2);
+		angle = (float)(Math.PI/2); // suunta ylöspäin
 		alive = true;
 		health = INITIAL_HEALTH;
 	}

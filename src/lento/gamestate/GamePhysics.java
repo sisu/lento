@@ -96,7 +96,8 @@ public class GamePhysics {
 			// pelaaja kuoli seinääntörmäyksen seurauksena
 			localPlayer.alive = false;
 			localPlayer.deaths++;
-			observer.die(localPlayer.id, Player.INITIAL_HEALTH-localPlayer.health);
+			if (observer != null)
+				observer.die(localPlayer.id, Player.INITIAL_HEALTH-localPlayer.health);
 		}
 
 		// Päivitä ammusten sijainnit
@@ -150,7 +151,7 @@ public class GamePhysics {
 		Point2D.Float loc = coll.getLoc();
 		float dot = normal.x*speed.x + normal.y*speed.y;
 		if (dot>=0) {
-			System.out.println("phale");
+//			System.out.println("phale");
 			dot = -dot;
 		}
 		pl.health -= ((int)(-dot*COLLISION_DAMAGE_FACTOR));
@@ -170,7 +171,7 @@ public class GamePhysics {
 		float diffDot = diffX*normal.x + diffY*normal.y;
 
 		if (diffDot>=0) {
-			System.out.println("wtf");
+//			System.out.println("wtf");
 			diffDot = -diffDot;
 		}
 		if (diffDot >= -asd) diffDot -= asd;
@@ -243,7 +244,8 @@ public class GamePhysics {
 			float vy = -sa*BULLET_SPEED + player.speedVec.y;
 
 //			System.out.printf("muu %f %f ; %f %f (%f %f) (%f ; %f)\n", locX,locY,vx,vy, player.location.x, player.location.y, td, (1-td)*tDiff/1e9f);
-			Bullet b = new Bullet(locX,locY,vx,vy,player.id,nextID+count);
+			Bullet b = new Bullet(locX,locY,vx,vy,player.id,nextID);
+			nextID = (nextID+1) & 0xffff; // ammus-ID:t ovat väliltä 0-2^16
 			++count;
 
 			// lasketaan muuttujaan td missä kohtaa framen aikana ammus ammuttiin
