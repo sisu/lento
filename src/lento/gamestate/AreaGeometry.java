@@ -84,10 +84,12 @@ public class AreaGeometry {
 		Point2D.Float start;
 		/** Loppupiste */
 		Point2D.Float end;
-		/** Normaalivektori */
+		/** Särmän normaalivektori; tämä on aina yksikkövektori. */
 		Point2D.Float normal;
 
 		/** Luo uuden särmän.
+		 * Annettu normaalivektori muunnetaan automaattisesti yksikkövektoriksi.
+		 *
 		 * @param x1 alkupisteen x-koordinaatti
 		 * @param y1 alkupisteen y-koordinaatti
 		 * @param x2 loppupisteen x-koordinaatti
@@ -98,12 +100,15 @@ public class AreaGeometry {
 		Edge(float x1, float y1, float x2, float y2, float nx, float ny) {
 			start = new Point2D.Float(x1,y1);
 			end = new Point2D.Float(x2,y2);
+
+			// tee normaalista yksikkövektori
 			float len = (float)Math.sqrt(nx*nx+ny*ny);
 			normal = new Point2D.Float(nx/len,ny/len);
 		}
 	}
 
 	/** Lukee pelialueen tiedot tiedostosta.
+	 *
 	 * @param file tiedosto, josta pelialueen tiedot luetaan.
 	 *
 	 * @throws IOException Tiedostoa ei löydy tai sen muotoilu on virheellinen.
@@ -158,15 +163,19 @@ public class AreaGeometry {
 		}
 	}
 	/** Heittää poikkeuksen, joka kertoo kenttätiedoston lukemisessa tapahtuneesta virheestä.
+	 *
 	 * @param file tiedosto, jota oltiin lukemassa
 	 * @param line tiedoston rivi, jolla virhe tapahtui
 	 * @param msg lisätietoa virheestä
+	 *
+	 * @throws IOException aina kun metodia kutsutaan
 	 */
 	private void readError(File file, int line, String msg) throws IOException {
 		throw new IOException("Tiedoton "+file.getAbsolutePath()+" luku epäonnistui rivillä "+line+": "+msg);
 	}
 
 	/** Palauttaa pelialueen polygonit. Tämä ei sisällä kentän reunoja.
+	 *
 	 * @return taulukko kentän polygoneista.
 	 */
 	public ArrayList<ColoredPolygon> getPolygons() {
@@ -175,6 +184,7 @@ public class AreaGeometry {
 
 	/** Generoi satunnaisen syntymispaikan pelaajalle.
 	 * Generoitu paikka ei ole minkään polygonin sisällä.
+	 *
 	 * @return satunnainen tyhjä paikka pelialueen sisällä
 	 */
 	public Point2D.Float getSpawnPoint() {
@@ -196,22 +206,36 @@ public class AreaGeometry {
 	}
 
 	/** Määrittää polygonin särmät ja lisää ne särmälistaan.
+	 *
 	 * @param p polygoni, jonka särmät määritetään
 	 */
 	private void addEdges(Polygon p) {
-		// Testaa, ovatko kärkipisteet listattu myötä- vai vastapäivään
+		// Testataan, ovatko kärkipisteet listattu myötä- vai vastapäivään.
+		// Testi perustuu polygonin pinta-alan laskemiseen ristitulojen avulla.
+		// Suunta saadaan testaamalla, onko ristitulojen summa negatiivinen vai positiivinen.
 		long area=0;
 		int x0=p.xpoints[0], y0=p.ypoints[0];
 		for(int i=2; i<p.npoints; ++i)
 			area += crossp(x0,y0,p.xpoints[i-1],p.ypoints[i-1],p.xpoints[i],p.ypoints[i]);
 		int direction = area<0 ? 1 : -1;
 
-		for(int i=1; i<p.npoints; ++i)
-			addEdge(p.xpoints[i-1],p.ypoints[i-1],p.xpoints[i],p.ypoints[i], direction);
-		addEdge(p.xpoints[p.npoints-1],p.ypoints[p.npoints-1],p.xpoints[0],p.ypoints[0], direction);
+		for(int i=1; i<p.npoints; ++i) {
+			addEdge(p.xpoints[i-1],
+					p.ypoints[i-1],
+					p.xpoints[i],
+					p.ypoints[i],
+					direction);
+		}
+		// Lisätään särmä viimeisen ja ensimmäisen pisteen välille
+		addEdge(p.xpoints[p.npoints-1],
+				p.ypoints[p.npoints-1],
+				p.xpoints[0],
+				p.ypoints[0],
+				direction);
 	}
 
 	/** Lisää yhden särmän särmälistaan.
+	 *
 	 * @param x1 alkupisteen x-koordinaatti
 	 * @param y1 alkupisteen y-koordinaatti
 	 * @param x2 loppupisteen x-koordinaatti
@@ -221,7 +245,6 @@ public class AreaGeometry {
 	private void addEdge(int x1, int y1, int x2, int y2, int direction) {
 		int nx = (y1-y2)*direction;
 		int ny = (x2-x1)*direction;
-//		System.out.printf("adding edge: %d %d - %d %d ; %d %d\n", x1,y1,x2,y2,nx,ny);
 		edges.add(new Edge(x1,y1,x2,y2,nx,ny));
 	}
 
@@ -245,6 +268,7 @@ public class AreaGeometry {
 	}
 
 	/** Poistaa kentällä olevat esteet ja asettaa uuden koon kentälle.
+	 *
 	 * @param w kentän uusi leveys
 	 * @param h kentän uusi korkeus
 	 *
@@ -258,6 +282,7 @@ public class AreaGeometry {
 		setSize(w,h);
 	}
 	/** Asettaa pelialueen koon ja luo reunojen särmät.
+	 *
 	 * @param w kentän leveys
 	 * @param h kentän korkeus
 	 */
@@ -270,6 +295,7 @@ public class AreaGeometry {
 		addEdge(0,h,0,0,1);
 	}
 	/** Asettaa reunojen värin.
+	 *
 	 * @param c uusi reunaväri
 	 *
 	 * @throws IllegalArgumentException c on null
@@ -280,6 +306,7 @@ public class AreaGeometry {
 		borderColor = c;
 	}
 	/** Lisää polygonin alueen esteisiin.
+	 *
 	 * @param poly lisättävä polygoni
 	 *
 	 * @throws IllegalArgumentException poly on null
@@ -294,6 +321,7 @@ public class AreaGeometry {
 	}
 
 	/** Laskee ristitulon suuruuden kaksiulotteisille kokonaislukuvektoreille.
+	 *
 	 * @param x0 origin x-koordinaatti
 	 * @param y0 origin y-koordinaatti
 	 * @param x1 1. vektorin x-koordinaatti
@@ -307,6 +335,7 @@ public class AreaGeometry {
 		return x1*y2-x2*y1;
 	}
 	/** Laskee ristitulon suuruuden kaksiulotteisille liukulukuvektoreille.
+	 *
 	 * @param x0 origin x-koordinaatti
 	 * @param y0 origin y-koordinaatti
 	 * @param x1 1. vektorin x-koordinaatti
@@ -320,6 +349,7 @@ public class AreaGeometry {
 		return x1*y2-x2*y1;
 	}
 	/** Lukee merkkijonosta heksana esitetyn RGB-muotoisen väriarvon.
+	 *
 	 * @param str merkkijono, josta väriarvo luetaan
 	 * @return luettu väriarvo
 	 * 
