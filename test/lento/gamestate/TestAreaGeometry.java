@@ -9,7 +9,7 @@ import java.awt.*;
 /**
  * Testaa AreaGeometry-luokan metodeita.
  */
-public class TestGeom {
+public class TestAreaGeometry {
 
 	/** Yrittää antaa null-viitteen tiedostoparametrina AreaGeometryn konstruktorille.
 	 * Tästä pitäisi seurata poikkeus.

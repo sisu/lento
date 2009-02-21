@@ -117,14 +117,18 @@ public class GamePhysics {
 			Point2D.Float loc = localPlayer.location;
 			float dist2 = pointLineDistSq(loc, prevLoc, b.location);
 			if (dist2 < BULLET_HIT_RANGE*BULLET_HIT_RANGE) {
-//				System.out.printf("bullet hit: %f ; %f %f ; %f %f\n", dist2, b.location.x, b.location.y, p.location.x, p.location.y);
 				deleteBullet(i);
+				// älä jätä lopusta kohtaan i siirrettyä ammusta päivittämättä
+				--i;
+
 				if (observer!=null)
 					observer.hit(b);
+
 				Player shooter = getPlayer(b.getShooter());
 				if (shooter!=null && shooter.id!=localPlayer.id)
 					shooter.damageDone += BULLET_DAMAGE;
-				--i;
+
+
 				localPlayer.health -= BULLET_DAMAGE;
 				localPlayer.damageTaken += BULLET_DAMAGE;
 				if (localPlayer.health <= 0) {
@@ -135,7 +139,6 @@ public class GamePhysics {
 					if (observer!=null)
 						observer.die(b.getShooter(), Player.INITIAL_HEALTH-localPlayer.health);
 				}
-				break;
 			}
 		}
 	}
@@ -183,6 +186,22 @@ public class GamePhysics {
 		final float eps = 1e-5f;
 		pl.prevLocation.x = loc.x+speed.x*eps;
 		pl.prevLocation.y = loc.y+speed.y*eps;
+	}
+
+	/** Laskee etäisyyden neliön pisteen ja janan välillä.
+	 * Tätä funktiota käytetään apuna määrittäessä, osuuko ammus pelaajaan.
+	 * @param p testattava piste
+	 * @param start janan alkupiste
+	 * @param end janan loppupiste
+	 * @return pisteen p etäisyyden neliö jananasta (start,end)
+	 */
+	private static float pointLineDistSq(Point2D.Float p, Point2D.Float start, Point2D.Float end) {
+		float dx = end.x-start.x, dy = end.y-start.y;
+		float u = ((p.x-start.x)*dx + (p.y-start.y)*dy) / (dx*dx+dy*dy);
+
+		if (u>=0 && u<=1)
+			return (float)p.distanceSq(start.x+u*dx, start.y+u*dy);
+		return (float)Math.min(p.distanceSq(start), p.distanceSq(end));
 	}
 
 	/** Poistaa ammuksen bullets-taulukon indeksin perusteella.
@@ -261,22 +280,6 @@ public class GamePhysics {
 		return count;
 	}
 
-	/** Laskee etäisyyden neliön pisteen ja janan välillä.
-	 * Tätä funktiota käytetään apuna määrittäessä, osuuko ammus pelaajaan.
-	 * @param p testattava piste
-	 * @param start janan alkupiste
-	 * @param end janan loppupiste
-	 * @return pisteen p etäisyyden neliö jananasta (start,end)
-	 */
-	private static float pointLineDistSq(Point2D.Float p, Point2D.Float start, Point2D.Float end) {
-		float dx=end.x-start.x, dy=end.y-start.y;
-		float u = ((p.x-start.x)*dx + (p.y-start.y)*dy) / (dx*dx+dy*dy);
-
-		if (u>=0 && u<=1)
-			return (float)p.distanceSq(start.x+u*dx, start.y+u*dy);
-		return (float)Math.min(p.distanceSq(start), p.distanceSq(end));
-	}
-
 	/** Palauttaa pelialueen tiedot AreaGeometry-oliona.
 	 * @return nykyistä pelialuetta vastaava AreaGeometry-olio.
 	 */
@@ -302,31 +305,17 @@ public class GamePhysics {
 		int i = playerIndex[pl.id];
 		int size = players.size();
 
+		if (i<0 || i>=size || players.get(i).id != pl.id) {
+			// pelaaja jo poistettu
+			return;
+		}
+
+		// Siirrä taulukon viimeinen poistuvan paikalle
 		Player last = players.get(size-1);
 		players.set(i, last);
 		players.remove(size-1);
 
 		playerIndex[last.getID()] = i;
-	}
-	/** Asettaa fysiikkatarkkailijan. Oliolle välitetään tiedot ainoastaan paikallisen
-	 * pelaajan tilan muutoksista. Funktion kutsuminen poistaa käytöstä aiemmin
-	 * asetetun tarkkailijan.
-	 * @param observer uusi fysiikkatarkkailija
-	 */
-	public void setObserver(PhysicsObserver observer) {
-		this.observer = observer;
-	}
-	/** Palauttaa ammuksen ampujan pelaaja-ID:n ja ammus-ID:n perusteella.
-	 * @param shooter ampujan pelaaja-ID
-	 * @param id ammuksen ammus-ID
-	 * @return ID-numeroita vastaava ammus
-	 * @return null, jos mikään ammus ei vastaa annettuja tietoja
-	 */
-	public Bullet getBullet(int shooter, int id) {
-		int idx = bulletIndex[shooter][id];
-		if (idx >= bullets.size())
-			return null;
-		return bullets.get(idx);
 	}
 	/** Palauttaa pelaaja-ID:tä vastaavan Pelaaja-olion.
 	 * @param id
@@ -341,6 +330,15 @@ public class GamePhysics {
 		if (pl.id != id)
 			return null;
 		return pl;
+	}
+
+	/** Asettaa fysiikkatarkkailijan. Oliolle välitetään tiedot ainoastaan paikallisen
+	 * pelaajan tilan muutoksista. Funktion kutsuminen poistaa käytöstä aiemmin
+	 * asetetun tarkkailijan.
+	 * @param observer uusi fysiikkatarkkailija
+	 */
+	public void setObserver(PhysicsObserver observer) {
+		this.observer = observer;
 	}
 	/** Poistaa ammuksen pelistä ja päivittää ampujan osumatilastot.
 	 * @param shooter ammuksen ampujan pelaaja-ID

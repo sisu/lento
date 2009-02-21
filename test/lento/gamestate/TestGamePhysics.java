@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Testaa GamePhysics-luokaa metodeita.
  */
-public class TestPhysics {
+public class TestGamePhysics {
 
 	private GamePhysics physics;
 	private Player pl1;
@@ -26,19 +26,14 @@ public class TestPhysics {
 
 		pl1 = new Player();
 		pl1.id = 25;
+		pl1.spawn(new Point2D.Float(50, 50));
 
 		pl2 = new Player();
 		pl2.id = 30;
-
-		resetPlayers();
+		pl2.spawn(new Point2D.Float(100,100));
 
 		physics.addPlayer(pl1);
 		physics.addPlayer(pl2);
-	}
-	/** Asettaa olioille pl1 ja pl2 lähtöpaikat. */
-	private void resetPlayers() {
-		pl1.spawn(new Point2D.Float(50, 50));
-		pl2.spawn(new Point2D.Float(100,100));
 	}
 	
 	/** Yritä hakea pelaajaa, jota vastaavaa pelaaja-ID:tä ei ole lisätty. */
@@ -50,6 +45,7 @@ public class TestPhysics {
 	@Test public void getPlayer() {
 		assertEquals(pl1, physics.getPlayer(pl1.getID()));
 		assertEquals(pl2, physics.getPlayer(pl2.getID()));
+		assertNull(physics.getPlayer(50));
 	}
 
 	/** Generoi ammuksia GamePhysics.createLocalBullets-metodilla. */
@@ -72,9 +68,6 @@ public class TestPhysics {
 
 		assertEquals(bullets.get(0).getID(), nextID);
 		assertEquals(bullets.get(1).getID(), nextID+1);
-
-		// Palauta physics-olio vastaamaan tilannetta ennen testin alkua
-		bullets.clear();
 	}
 
 	/** Tarkistaa, että pelaajaa liikutetaan joss pelaaja on hengissä. */
@@ -89,13 +82,10 @@ public class TestPhysics {
 
 		assertTrue("Kuollut pelaaja ei liiku", origLoc1.equals(pl1.location));
 		assertFalse("Elossa oleva pelaaja liikkuu", origLoc2.equals(pl2.location));
-
-		// Palauta Player-olioiden tile ennalleen
-		resetPlayers();
 	}
 
 	/** Tarkistaa, että pelaaja kimpoaa seinästä. */
-	@Test public void collisionTest() {
+	@Test public void wallReflection() {
 		pl1.location.x = 10;
 		pl1.speedVec.x = -15; 
 
@@ -104,14 +94,12 @@ public class TestPhysics {
 		physics.update(1.0f, pl1);
 
 		assertTrue("Törmäys ei tapahtunut", pl1.location.x > 0);
-
-		resetPlayers();
 	}
 
 	/** Tarkistaa, että pelaaja kuolee törmäyksen yhteydessä, kun osumapisteet
 	 * ovat riittävän alhaiset.
 	 */
-	@Test public void collisionDieTest() {
+	@Test public void collisionDeath() {
 		pl1.location.x = 10;
 		pl1.speedVec.x = -50; 
 		pl1.alive = true;
@@ -121,7 +109,54 @@ public class TestPhysics {
 		physics.update(1.0f, pl1);
 
 		assertFalse("Pelaajan olisi pitänyt kuolla törmäykseen", pl1.alive);
+	}
 
-		resetPlayers();
+	/** Tarkistaa, että ammus katoaa törmätessään seinään. */
+	@Test public void bulletCollisionToWall() {
+		// vasemmalle liikkuva ammus paikassa (10,100)
+		Bullet b = new Bullet(10, 100, -20, 0, pl2.id, 10);
+		physics.addBullet(b);
+
+		assertEquals("Ammuksia annettu physics-oliolle tasan 1", physics.getBullets().size(), 1);
+
+		// ammus ehtii törmätä vasempaan seinään
+		physics.update(1.0f, pl1);
+
+		assertTrue("Ammuksen olisi pitänyt kadota", physics.getBullets().isEmpty());
+	}
+
+	/** Tarkistaa, että pelaaja kuolee osuessaan ammukseen, kun pelaajan
+	 * osumapisteet ovat riittävän vähissä.
+	 */
+	@Test public void bulletKillPlayer() {
+		// Ylöspäin nouseva ammus pl2:n alapuolella
+		Point2D.Float loc = pl2.location;
+		Bullet b = new Bullet(loc.x, loc.y-GamePhysics.BULLET_HIT_RANGE*2, 0, 100, pl1.id, 10);
+		physics.addBullet(b);
+
+		pl2.alive = true;
+		pl2.health = 1;
+
+		// ammus ehtii osua pelaajaan pl2 ja tappaa hänet
+		physics.update(1.0f, pl2);
+
+		assertFalse("Pelaajan olisi pitänyt kuolla", pl2.alive);
+		assertTrue("Ammuksen olisi pitänyt kadota", physics.getBullets().isEmpty());
+
+		assertEquals("Tappomäärän olisi pitänyt kasvaa", pl1.kills, 1);
+		assertEquals("Kuolinmäärän olisi pitänyt kasvaa", pl2.deaths, 1);
+	}
+
+	/** Yrittää poistaa pelistä null-pelaajan. */
+	@Test(expected=NullPointerException.class) public void nullPlayerDelete() {
+		physics.deletePlayer(null);
+	}
+
+	/** Poistaa pelistä pelaajan pl1. */
+	@Test public void playerDelete() {
+		physics.deletePlayer(pl1);
+
+		assertEquals("Pelaajamäärän olisi pitänyt muuttua", physics.getPlayers().size(), 1);
+		assertNull("Pelaajaa ei pitäisi löytyä", physics.getPlayer(pl1.id));
 	}
 }
