@@ -6,8 +6,9 @@ import java.io.*;
 import java.awt.geom.*;
 import java.awt.*;
 
+/**
+ * Testaa GamePhysics-luokaa metodeita.
+ */
 public class TestPhysics {
 	
-	@Test public void compareTest() {
-	}
 }

@@ -6,6 +6,9 @@ import java.io.*;
 import java.awt.geom.*;
 import java.awt.*;
 
+/**
+ * Testaa AreaGeometry-luokan metodeita.
+ */
 public class TestGeom {
 
 	/** Yrittää antaa null-viitteen tiedostoparametrina AreaGeometryn konstruktorille.

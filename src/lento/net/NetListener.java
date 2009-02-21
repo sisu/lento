@@ -28,6 +28,9 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Aikaraja, joka yhdistämistä yrittäessä odotetaan ennen luovuttamista. */
 	static final int CONNECT_TIMEOUT = 2000;
 
+	/** Aikaraja, joka peliin liittyessä odotetaan ennen luovuttamista. */
+	static final int JOIN_TIMEOUT = 2000;
+
 	static final int TCP_GET_AREA_INFO = 0x01;
 	static final int TCP_GET_PLAYER_INFO = 0x02;
 	static final int TCP_AREA_INFO = 0x03;
@@ -276,7 +279,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 		while(waitCount>0) {
 			System.out.println("waiting: "+waitCount);
 			try {
-				wait();
+				wait(JOIN_TIMEOUT);
 			} catch(InterruptedException e) {
 				throw new IOException("Liittymisen hyväksymispyyntöjen odotus epäonnistui.");
 			}
@@ -366,27 +369,43 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 */
 	void sendUDPPacket(byte[] buf, int length) throws IOException {
 		DatagramPacket packet = new DatagramPacket(buf, length);
-		for(NetPlayer pl : players) {
-			if (pl.getID()<0) continue;
+		for(int i=0; i<players.size(); ++i) {
+			NetPlayer pl = players.get(i);
+			if (pl.getID()<0)
+				continue; // pelaaja yhdistänyt mutta ei liittynyt peliin
+
 //			System.out.printf("Sending UDP packet %d: %d bytes to %s : %d\n", buf[0], length, pl.socket.getInetAddress().toString(), pl.udpPort);
 			packet.setAddress(pl.socket.getInetAddress());
 			packet.setPort(pl.udpPort);
-			udpSocket.send(packet);
+			try {
+				udpSocket.send(packet);
+			} catch(IOException e) {
+				// tulkitaan lähetysvirhe pelaajan poistumisena
+				deletePlayer(pl);
+				--i;
+			}
 		}
 	}
 	/** Lähettää TCP-paketin kaikille etäpelaajille.
 	 * @param buf taulukko, jonka alusta lähetettävä data luetaan
 	 * @param length lähetettävän viestin pituus
-	 *
-	 * @throws IOException viestin lähetys epäonnistuu
 	 */
-	void sendTCPPacket(byte[] buf, int length) throws IOException {
-		for(NetPlayer pl : players) {
-			if (pl.getID()<0) continue;
+	void sendTCPPacket(byte[] buf, int length) {
+		for(int i=0; i<players.size(); ++i) {
+			NetPlayer pl = players.get(i);
+			if (pl.getID()<0)
+				continue; // pelaaja yhdistänyt mutta ei liittynyt peliin
+
 //			System.out.printf("sending %d(%d) to %s : %d\n", buf[0], length, pl.socket.getInetAddress().toString(), pl.socket.getPort());
-			OutputStream out = pl.socket.getOutputStream();
-			out.write(buf, 0, length);
-			out.flush();
+			try {
+				OutputStream out = pl.socket.getOutputStream();
+				out.write(buf, 0, length);
+				out.flush();
+			} catch(IOException e) {
+				// tulkitaan lähetysvirhe pelaajan poistumisena
+				deletePlayer(pl);
+				--i;
+			}
 		}
 	}
 
@@ -430,6 +449,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 			sendUDPPacket(outBuffer.getData(), outBuffer.size());
 		}
 		if (!localShoots.isEmpty()) {
+			// paikallinen pelaaja ampui framen aikana
+			// lähetetään ammukset kaikille etäpelaajille
 //			System.out.printf("Sending %d bullets\n", localShoots.size());
 			outBuffer.reset();
 			DataOutputStream out = new DataOutputStream(outBuffer);
@@ -450,6 +471,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 			localShoots.clear();
 		}
 		if (!localHits.isEmpty()) {
+			// paikalliseen pelaajaan osui ammuksia
+			// lähetetään niiden tiedot kaikille
 			outBuffer.reset();
 			DataOutputStream out = new DataOutputStream(outBuffer);
 			out.write(UDP_PLAYER_HIT);
@@ -505,6 +528,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			sendTCPPacket(outBuffer.getData(), outBuffer.size());
 		} catch(IOException e) {
 			e.printStackTrace();
+			done = true;
 		}
 	}
 	// PhysicsObserver-rajapinta loppuu

@@ -76,32 +76,43 @@ public class GamePhysics {
 	public synchronized void update(float time, Player localPlayer) {
 		int localHealth = localPlayer.health;
 		boolean alive = localPlayer.alive;
+		
+		// päivitä kaikkien pelaajien sijainnit
 		for(Player pl : players) {
-			if (pl.isAlive()) {
-				pl.update(time);
+			if (!pl.isAlive())
+				continue;
+			pl.update(time);
+
+			// toista niin kauan kuin pelaaja on törmäämässä seinään
+			while(true) {
 				Collision coll = geometry.getCollision(pl.prevLocation, pl.location);
-				while(coll != null) {
-					handleReflection(pl, coll);
-					coll = geometry.getCollision(pl.prevLocation, pl.location);
-				}
+				if (coll==null)
+					break;
+				handleReflection(pl, coll);
 			}
 		}
 		localPlayer.damageTaken += localHealth-localPlayer.health;
 		if (alive && localPlayer.health<=0) {
+			// pelaaja kuoli seinääntörmäyksen seurauksena
 			localPlayer.alive = false;
 			localPlayer.deaths++;
 			observer.die(localPlayer.id, Player.INITIAL_HEALTH-localPlayer.health);
 		}
+
+		// Päivitä ammusten sijainnit
 		for(int i=0; i<bullets.size(); ++i) {
 			Bullet b = bullets.get(i);
 			Point2D.Float prevLoc = b.update(time);
 			if (geometry.getCollision(prevLoc, b.location)!=null) {
+				// ammus törmäsi seinään
 				deleteBullet(i);
-				--i;
+				--i; // taulukon kohtaan i tullut uusi ammus; ei jätetä sitä välistä
 				continue;
 			}
-			if (!localPlayer.alive)
+			if (!localPlayer.isAlive())
 				continue;
+
+			// tarkista osuiko ammus paikalliseen pelaajaan
 			Point2D.Float loc = localPlayer.location;
 			float dist2 = pointLineDistSq(loc, prevLoc, b.location);
 			if (dist2 < BULLET_HIT_RANGE*BULLET_HIT_RANGE) {
@@ -129,7 +140,7 @@ public class GamePhysics {
 	}
 
 	/** Määrittää pelaajan uuden sijainnin ja nopeusvektorin törmäyksen jälkeen.
-	 * Uudet tiedot tallennetaan suoraan parametrina annettuun pelaaja-olioon.
+	 * Uudet tiedot tallennetaan suoraan parametrina annettuun Player-olioon.
 	 * @param pl seinään törmännyt pelaaja
 	 * @param coll tapahtunut törmäys
 	 */
