@@ -21,6 +21,7 @@
 	</target>
 	<target name="doc" description="create documentation">
 		<javadoc access="private" author="true" version="true" destdir="doc" sourcepath="src">
+		<package name="lento.*"/>
 		</javadoc>
 	</target>
 
@@ -40,5 +41,10 @@
 				</fileset>
 			</batchtest>
 		</junit>
+	</target>
+	<target name="test-doc" description="create test documentation" depends="compile">
+		<javadoc access="private" author="true" version="true" destdir="tdoc" sourcepath="test">
+		<package name="lento.*"/>
+		</javadoc>
 	</target>
 </project>
