@@ -208,10 +208,13 @@ public class GamePhysics {
 	 * @param i poistettavan ammuksen indeksi bullets-taulukossa
 	 */
 	private void deleteBullet(int i) {
+		if (i<0)
+			return;
 		synchronized(bullets) {
 			// Siirretään taulukon viimeinen alkio poistettavan tilalle
 			int size = bullets.size();
-			if (i>=size) return;
+			if (i>=size)
+				return;
 			Bullet last = bullets.get(size-1);
 			bullets.set(i, last);
 			bullets.remove(size-1);
@@ -349,11 +352,15 @@ public class GamePhysics {
 	 */
 	public synchronized void deleteBullet(int shooter, int id, boolean selfHit) {
 		if (!selfHit) {
-			Player pl = getPlayer(id);
+			Player pl = getPlayer(shooter);
 			if (pl!=null)
 				pl.addHitDone();
 		}
 		int idx = bulletIndex[shooter][id];
-		deleteBullet(idx);
+		if (idx>=0 && idx<bullets.size()) {
+			Bullet b = bullets.get(idx);
+			if (b.shooter==shooter && b.id==id)
+				deleteBullet(idx);
+		}
 	}
 };

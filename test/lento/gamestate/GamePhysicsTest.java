@@ -183,4 +183,28 @@ public class GamePhysicsTest {
 		assertEquals("Pelaajamäärän olisi pitänyt muuttua", physics.getPlayers().size(), 1);
 		assertNull("Pelaajaa ei pitäisi löytyä", physics.getPlayer(pl1.id));
 	}
+
+	/** Lisää peliin ammuksen ja poistaa sen. */
+	@Test public void deleteBullet() {
+		Bullet b = new Bullet(10, 100, -20, 0, pl2.id, 10);
+		physics.addBullet(b);
+
+		physics.deleteBullet(b.shooter, b.id, false);
+
+		assertEquals("Kaikki ammukset poistettu", physics.getBullets().size(), 0);
+		assertEquals("Ammus osui, joten tilastot päivitettävä", pl2.damageDone, GamePhysics.BULLET_DAMAGE);
+	}
+
+	/** Lisää peliin ammuksen ja yrittää poistaa pelissä olemattoman ammuksen. */
+	@Test public void deleteUnknownBullet() {
+		Bullet b = new Bullet(10, 100, -20, 0, pl2.id, 10);
+		physics.addBullet(b);
+
+		// yritä olemattomalla pelaaja-ID:llä
+		physics.deleteBullet(100, 15, false);
+		// yritä oikealla pelaaja-ID:llä väärällä ammus-ID:llä
+		physics.deleteBullet(b.shooter, b.id+1, false);
+
+		assertEquals("Ammus ei ole poistunut", physics.getBullets().size(), 1);
+	}
 }
