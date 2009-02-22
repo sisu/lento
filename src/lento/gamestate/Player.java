@@ -24,6 +24,13 @@ public class Player implements Comparable<Player> {
 	protected String name="";
 	/** Pelaajasta ylläpidetyt tilastotiedot */
 	protected int kills=0, deaths=0, damageDone=0, damageTaken=0;
+	/** Sisältää tiedon, paljonko pelaajalle oli aiheutunut vahinkoa hänen viimeksi
+	 * herätessään henkiin. Tämä tieto lähetetään peliin liittyvälle pelaajalle,
+	 * jotta liittyvän pelaajan tiedot vastaisivat muiden tietoja pidemmällä
+	 * aikavälilllä.
+	 */
+	protected int delayedDamageTaken=0;
+
 	/** Aluksen väri */
 	protected Color color;
 	/** Pelaajan ID-numero */
@@ -116,6 +123,7 @@ public class Player implements Comparable<Player> {
 		angle = (float)(Math.PI/2); // suunta ylöspäin
 		alive = true;
 		health = INITIAL_HEALTH;
+		delayedDamageTaken = damageTaken;
 	}
 	/** Palauttaa tiedon, onko pelaaja hengissä.
 	 * @return true, jos pelaaja on hengissä
@@ -144,6 +152,14 @@ public class Player implements Comparable<Player> {
 	 */
 	public int[] getStats() {
 		return new int[]{kills,deaths,damageDone,damageTaken};
+	}
+	/** Palauttaa pelaajan tilastotiedot.
+	 * Toimii muuten täysin samoin kuin getStats(), mutta palauttaa
+	 * itselle aiheutuneen vahingon kohdalla tiedon vahinkomäärästä
+	 * pelaajan syntyessä.
+	 */
+	public int[] getOldStats() {
+		return new int[]{kills,deaths,damageDone,delayedDamageTaken};
 	}
 	/** Palauttaa pelaajan pelaaja-ID:n.
 	 * @return pelaajan ID

@@ -65,7 +65,6 @@ class GameFrame extends JFrame {
 	 * huolehtii kaksoispuskuroinnista.
 	 */
 	public void repaint() {
-//		System.out.println("jee");
 		BufferStrategy bs = getBufferStrategy();
 		Graphics g=null;
 		try {

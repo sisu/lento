@@ -47,7 +47,6 @@ class HostPanel extends JPanel implements ActionListener {
 			int retVal = fc.showOpenDialog(this);
 			if (retVal==JFileChooser.APPROVE_OPTION) {
 				String name = fc.getSelectedFile().getAbsolutePath();
-				System.out.println("jee "+retVal+" "+name);
 				filename.setText(name);
 			}
 		}

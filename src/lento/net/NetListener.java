@@ -107,8 +107,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 * @return paikalliselle pelaajalle asetettu pelaaja-ID
 	 */
 	public int connect(InetAddress addr, int port) throws IOException {
-//		System.out.println("jee saatiin socket.");
-
 		Socket socket = new Socket();
 		socket.connect(new InetSocketAddress(addr,port), CONNECT_TIMEOUT);
 
@@ -174,7 +172,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 				InetSocketAddress info = new InetSocketAddress(p.getAddress(), p.getPort());
 				NetPlayer from = playerTable.get(info);
 				if (from==null)
-					System.out.println("Warning: packet from unknown host: "+p.getAddress().toString()+" : "+p.getPort());
+					System.out.println("Paketti tuntemattomalta koneelta: "+p.getAddress().toString()+" : "+p.getPort());
 				else
 					from.handleUDPPacket(p);
 			}
@@ -228,17 +226,12 @@ public class NetListener implements Runnable, PhysicsObserver {
 		int hSize = in.readInt();
 		geom.resetArea(wSize, hSize);
 
-//		System.out.printf("got sizes: %d %d\n", wSize,hSize);
-
 		Color bColor = readColor(in);
-//		System.out.println("got bcolor: "+bColor.toString());
 		geom.setBorderColor(bColor);
 
 		int amount = in.readUnsignedShort();
-//		System.out.println("amount: "+amount);
 		for(int i=0; i<amount; ++i) {
 			int count = in.readUnsignedShort();
-//			System.out.println("vertex count: "+count);
 			ColoredPolygon poly = new ColoredPolygon();
 			poly.color = readColor(in);
 			for(int j=0; j<count; ++j) {
@@ -263,8 +256,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 
 		int count = in.readUnsignedByte();
 
-//		System.out.println("player count: "+count);
-
 		// Ensimmäisenä saadaan vastaajan omat tiedot
 		NetPlayer current = new NetPlayer(in, this, connected);
 		players.add(current);
@@ -281,11 +272,9 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 */
 	private synchronized void requestJoins(int id) throws IOException {
 		waitCount = players.size();
-//		System.out.println("players to wait for: "+waitCount);
 		for(NetPlayer p : players)
 			p.requestJoin(id);
 		while(waitCount>0) {
-//			System.out.println("waiting: "+waitCount);
 			try {
 				wait(JOIN_TIMEOUT);
 			} catch(InterruptedException e) {

@@ -75,24 +75,22 @@ public class GameLoop {
 	 * Metodista palaudutaan vasta, kun paikallinen pelaaja poistuu pelistä.
 	 */
 	public void start() throws IOException {
-		System.out.println("creating game frame");
 		frame = new GameFrame(physics, localPlayer);
 		frame.addKeyListener(localPlayer);
 
 		new Thread(net).start();
 
-		System.out.println("starting game loop");
+//		System.out.println("starting game loop");
 
 		long prevTime = System.nanoTime();
 		long nextTime = prevTime;
 		try{
 			while(!done) {
-	//			System.out.println("loop");
 				long time = System.nanoTime();
 				float diff = (time-prevTime)/1e9f;
 
 				if (time/(1000*1000*1000) > prevTime/(1000*1000*1000)) {
-					System.out.println(frame.frameCount+"frames");
+//					System.out.println(frame.frameCount+"frames");
 					frame.frameCount=0;
 				}
 
@@ -100,7 +98,7 @@ public class GameLoop {
 				if (!localPlayer.isAlive() && time>=localPlayer.spawnTime) {
 					localPlayer.spawn(physics.getGeometry().getSpawnPoint());
 					spawned = true;
-					System.out.println("local spawn!");
+//					System.out.println("local spawn!");
 					net.sendSpawn();
 				}
 
@@ -120,7 +118,6 @@ public class GameLoop {
 					int maxShoots = (int)(localPlayer.shootEnergy / LocalPlayer.SHOOT_ENERGY_USE);
 					int count = physics.createLocalBullets(localPlayer, prevTime, time,
 							localPlayer.nextShootTime, localPlayer.nextBulletID, maxShoots);
-	//				if (count!=0) System.out.println("cnt "+count);
 					localPlayer.nextBulletID += count;
 					localPlayer.nextShootTime += count*GamePhysics.SHOOT_INTERVAL;
 					localPlayer.shootEnergy -= count*LocalPlayer.SHOOT_ENERGY_USE;
@@ -132,13 +129,10 @@ public class GameLoop {
 				frame.repaint();
 
 				prevTime = time;
-	//			System.out.println("asd");
 				if (time < nextTime) {
-	//				System.out.println("sleeping: "+(nextTime-time)/1000);
 					Thread.sleep((nextTime-time)/1000000);
 				}
 				nextTime += FRAME_TIME;
-	//			if (false) throw new InterruptedException();
 			}
 		}catch(InterruptedException e){
 			// FIXME: tee jotain?

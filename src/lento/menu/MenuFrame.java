@@ -50,7 +50,6 @@ public class MenuFrame extends JFrame implements ActionListener {
 	 */
 	public void actionPerformed(ActionEvent ae) {
 		String action = ae.getActionCommand();
-//		System.out.println(action);
 		try {
 			loop=null;
 			String name=playerInfo.nameField.getText();
@@ -81,11 +80,8 @@ public class MenuFrame extends JFrame implements ActionListener {
 		} catch(NumberFormatException e) {
 			JOptionPane.showMessageDialog(null, "Virheellinen porttinumero.");
 		} catch(Exception e) {
-			// FIXME: näytä joku ruma dialogi
 			String msg = e.getMessage();
 			JOptionPane.showMessageDialog(null, "Pelin lataamisessa sattui virhe:\n" +msg);
-//			System.out.println(e.getMessage());
-//			e.printStackTrace();
 		}
 		if (loop!=null) {
 			// Java odottaa, että tästä metodista palataan ennen uusien

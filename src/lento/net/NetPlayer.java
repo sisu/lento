@@ -49,7 +49,6 @@ class NetPlayer extends Player implements Runnable {
 			in = new DataInputStream(socket.getInputStream());
 			while(socket.isConnected()) {
 				socket.setSoTimeout(0); // poista timeout käytöstä
-//				System.out.println("Waiting for next packet...");
 				int packetType = in.read();
 				if (packetType == -1)
 					break;
@@ -141,7 +140,6 @@ class NetPlayer extends Player implements Runnable {
 	 * @throws IOException viestin lähettäminen epäonnistuu
 	 */
 	private void sendPlayerInfo() throws IOException {
-		System.out.println("asd");
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_PLAYER_INFO);
 
@@ -149,7 +147,6 @@ class NetPlayer extends Player implements Runnable {
 		out.write(listener.physics.getPlayers().size());
 
 		// Lähetetään ensin paikallisen pelaajan tiedot
-		System.out.println("jee: "+listener.tcpSocket.getInetAddress().toString());
 		out.write(listener.tcpSocket.getInetAddress().getAddress(), 0, 4);
 		out.writeShort(listener.tcpSocket.getLocalPort());
 		out.writeShort(listener.udpSocket.getLocalPort());
@@ -158,7 +155,6 @@ class NetPlayer extends Player implements Runnable {
 		sendSinglePlayerData(out, listener.localPlayer);
 
 		for(NetPlayer p : players) {
-			System.out.println("Attemping to send pl info: "+p.id);
 			if (p.id >= 0)
 				sendSinglePlayer(out,p);
 		}
@@ -194,7 +190,7 @@ class NetPlayer extends Player implements Runnable {
 
 		NetListener.writeColor(out,p.getColor());
 
-		int[] stats = p.getStats();
+		int[] stats = p.getOldStats();
 		assert stats.length==4;
 		for(int s : stats)
 			out.writeInt(s);
@@ -210,8 +206,6 @@ class NetPlayer extends Player implements Runnable {
 	 * @throws IOException syötevirran luku tai viestin lähettäminen epäonnistuu
 	 */
 	private void handleJoinRequest(DataInputStream in) throws IOException {
-		System.out.println("got join request");
-
 		tcpPort = in.readUnsignedShort();
 		udpPort = in.readUnsignedShort();
 		System.out.printf("Got TCP and UDP ports: %d %d\n", tcpPort, udpPort);
@@ -236,7 +230,6 @@ class NetPlayer extends Player implements Runnable {
 			this.id = id;
 			out.write(NetListener.TCP_JOIN_OK);
 			listener.playerJoined(this);
-			System.out.println("OK sent "+id);
 		}
 	}
 
@@ -296,12 +289,9 @@ class NetPlayer extends Player implements Runnable {
 		InetAddress addr = InetAddress.getByAddress(buf);
 		tcpPort = in.readUnsignedShort();
 
-		System.out.println("got address and port: "+addr.toString()+" "+tcpPort);
-
 		if (socket==null) {
 			socket = new Socket();
 			socket.connect(new InetSocketAddress(addr, tcpPort), NetListener.CONNECT_TIMEOUT);
-			System.out.println("opened new socket");
 		}
 
 		udpPort = in.readUnsignedShort();
@@ -333,9 +323,7 @@ class NetPlayer extends Player implements Runnable {
 		DataOutputStream out = new DataOutputStream(socket.getOutputStream());
 		out.write(NetListener.TCP_JOIN_GAME);
 
-		System.out.println("Sending TCP port: "+listener.tcpSocket.getLocalPort());
 		out.writeShort(listener.tcpSocket.getLocalPort());
-		System.out.println("Sending UDP port: "+listener.udpSocket.getLocalPort());
 		out.writeShort(listener.udpSocket.getLocalPort());
 		out.write(localID);
 
@@ -370,8 +358,8 @@ class NetPlayer extends Player implements Runnable {
 					System.out.println("Warning: unknown UDP packet type: "+type);
 			}
 		} catch(IOException e) {
-			System.out.printf("Warning: Bad data from client %s (%s : %d)\n", name, socket.getInetAddress().toString(), udpPort);
-			// FIXME: katkaise yhteys?
+			System.out.printf("Epäkelpo UDP-paketti pelaajalta %s (%s : %d)\n", name, socket.getInetAddress().toString(), udpPort);
+			listener.deletePlayer(this);
 		}
 	}
 
@@ -412,7 +400,6 @@ class NetPlayer extends Player implements Runnable {
 	 * @throws IOException syötevirran luku epäonnistuu
 	 */
 	private void readBullets(ByteArrayInputStream istream) throws IOException {
-//		System.out.println("jee pateja");
 		DataInputStream in = new DataInputStream(istream);
 		int bulletID = in.readUnsignedShort();
 
@@ -438,7 +425,6 @@ class NetPlayer extends Player implements Runnable {
 		DataInputStream in = new DataInputStream(istream);
 
 		int count = istream.available()/3;
-//		System.out.println("hits count: "+count);
 		for(int i=0; i<count; ++i) {
 			int shooter = in.readUnsignedByte();
 			int bulletID = in.readUnsignedShort();
