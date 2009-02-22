@@ -43,7 +43,7 @@ class NetPlayer extends Player implements Runnable {
 	 * pelaajaan katkeaa, tai päätetään poistua itse pelistä.
 	 */
 	public void run() {
-		System.out.printf("NetPlayer thread started: %s : %d\n", socket.getInetAddress().toString(), socket.getPort());
+//		System.out.printf("NetPlayer thread started: %s : %d\n", socket.getInetAddress().toString(), socket.getPort());
 		DataInputStream in=null;
 		try {
 			in = new DataInputStream(socket.getInputStream());
@@ -208,7 +208,7 @@ class NetPlayer extends Player implements Runnable {
 	private void handleJoinRequest(DataInputStream in) throws IOException {
 		tcpPort = in.readUnsignedShort();
 		udpPort = in.readUnsignedShort();
-		System.out.printf("Got TCP and UDP ports: %d %d\n", tcpPort, udpPort);
+//		System.out.printf("Got TCP and UDP ports: %d %d\n", tcpPort, udpPort);
 		int id = in.read();
 
 		int nameLen = in.read();
@@ -246,7 +246,7 @@ class NetPlayer extends Player implements Runnable {
 
 		int damage = in.readUnsignedShort();
 //		System.out.printf("got damage: %d\n", damage);
-		damageTaken += damage;
+		damageTaken = delayedDamageTaken += damage;
 		deaths++;
 		alive = false;
 	}
@@ -307,7 +307,7 @@ class NetPlayer extends Player implements Runnable {
 		kills = in.readInt();
 		deaths = in.readInt();
 		damageDone = in.readInt();
-		damageTaken = in.readInt();
+		delayedDamageTaken = damageTaken = in.readInt();
 
 		alive = in.read()==1 ? true : false;
 	}
@@ -430,5 +430,7 @@ class NetPlayer extends Player implements Runnable {
 			int bulletID = in.readUnsignedShort();
 			listener.physics.deleteBullet(shooter,bulletID,shooter==id);
 		}
+		if (alive)
+			damageTaken += count * GamePhysics.BULLET_DAMAGE;
 	}
 };
