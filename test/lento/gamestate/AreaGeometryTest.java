@@ -14,6 +14,7 @@ public class AreaGeometryTest {
 	/** Testeissä käytetty AreaGeometry-olio. */
 	AreaGeometry geometry;
 
+	/** Luo geometry-muuttujaan uuden pelialueen, jossa on 1 polygoni. */
 	@Before public void init() throws IOException {
 		geometry = loadFromFile(
 				"1000 1000 ff00\n" +

@@ -86,8 +86,8 @@ public class NetListenerTest {
 
 		// varmistetaan, että päivitys meni perille
 		Player pl = nl2.physics.getPlayer(pl1.getID());
-		assertNotNull("Pelaajan tiedot löydyttävä", pl);
-		assertEquals(pl.getLoc(), pl1.getLoc());
-		assertEquals(pl.getSpeedVec(), pl1.getSpeedVec());
+		assertNotNull("Pelaajan tiedot löydyttävä.", pl);
+		assertEquals("Sijainnin päivityttävä.", pl.getLoc(), pl1.getLoc());
+		assertEquals("Nopeusvektorin päivityttävä", pl.getSpeedVec(), pl1.getSpeedVec());
 	}
 }

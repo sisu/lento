@@ -70,6 +70,7 @@ public class GamePhysics {
 	}
 
 	/** Päivittää pelaajien ja ammusten tilan. Tätä metodia kutsutaan kerran joka framen aikana.
+	 *
 	 * @param time edellisestä framesta kulunut aika sekunteina
 	 * @param localPlayer paikallinen pelaaja
 	 */
@@ -145,6 +146,7 @@ public class GamePhysics {
 
 	/** Määrittää pelaajan uuden sijainnin ja nopeusvektorin törmäyksen jälkeen.
 	 * Uudet tiedot tallennetaan suoraan parametrina annettuun Player-olioon.
+	 *
 	 * @param pl seinään törmännyt pelaaja
 	 * @param coll tapahtunut törmäys
 	 */
@@ -190,6 +192,7 @@ public class GamePhysics {
 
 	/** Laskee etäisyyden neliön pisteen ja janan välillä.
 	 * Tätä funktiota käytetään apuna määrittäessä, osuuko ammus pelaajaan.
+	 *
 	 * @param p testattava piste
 	 * @param start janan alkupiste
 	 * @param end janan loppupiste
@@ -241,6 +244,7 @@ public class GamePhysics {
 	/** Generoi ammuksia paikalliselle pelaajalle.
 	 * Kaikki parametreina annetut ajat ja palautettu aika ovat nanosekunteja.
 	 * Jos ammuksia ammutaan useampia, niiden ID-numeroiksi valitaan peräkkäisiä lukuja parametrista nextID alkaen.
+	 *
 	 * @param player ampuva pelaaja
 	 * @param prevTime aika edellisen framen alussa nanosekunteina
 	 * @param curTime aika tämän framen alussa nanosekunteina
@@ -323,6 +327,7 @@ public class GamePhysics {
 		playerIndex[last.getID()] = i;
 	}
 	/** Palauttaa pelaaja-ID:tä vastaavan Pelaaja-olion.
+	 *
 	 * @param id
 	 * @return ID:tä vastaava pelaaja
 	 * @return null, jos mikään pelaaja ei vastaa ID:tä
@@ -340,12 +345,14 @@ public class GamePhysics {
 	/** Asettaa fysiikkatarkkailijan. Oliolle välitetään tiedot ainoastaan paikallisen
 	 * pelaajan tilan muutoksista. Funktion kutsuminen poistaa käytöstä aiemmin
 	 * asetetun tarkkailijan.
+	 *
 	 * @param observer uusi fysiikkatarkkailija
 	 */
 	public void setObserver(PhysicsObserver observer) {
 		this.observer = observer;
 	}
 	/** Poistaa ammuksen pelistä ja päivittää ampujan osumatilastot.
+	 *
 	 * @param shooter ammuksen ampujan pelaaja-ID
 	 * @param id ammuksen ID
 	 * @param selfHit tosi, joss ampuja osui itseensä
