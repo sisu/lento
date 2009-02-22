@@ -459,7 +459,6 @@ public class NetListener implements Runnable, PhysicsObserver {
 		if (!localShoots.isEmpty()) {
 			// paikallinen pelaaja ampui framen aikana
 			// lähetetään ammukset kaikille etäpelaajille
-//			System.out.printf("Sending %d bullets\n", localShoots.size());
 			outBuffer.reset();
 			DataOutputStream out = new DataOutputStream(outBuffer);
 			out.write(UDP_PLAYER_SHOOT);

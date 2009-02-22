@@ -44,6 +44,8 @@ public class NetListenerTest {
 		InetAddress localhost = InetAddress.getByName("localhost");
 		int id = nl1.connect(localhost, nl2.tcpSocket.getLocalPort());
 		PlayerCreator.setLocalPlayerID(pl1, id);
+
+		new Thread(nl1).start();
 	}
 	/** Vapauttaa NetListener-olioille varatut resurssit. */
 	@After public void cleanUp() throws IOException {
@@ -52,7 +54,7 @@ public class NetListenerTest {
 	}
 
 	/** Luo ammuksen ja lähettää sen nl1:n kautta nl2:lle. */
-	@Test public void shootTest() throws IOException, InterruptedException {
+	@Test public void sendShoot() throws IOException, InterruptedException {
 		Bullet b = new Bullet(100, 100, 50, 50, pl1.getID(), 10);
 		// Lähetä ammus verkkoon
 		nl1.shoot(b);
@@ -75,7 +77,6 @@ public class NetListenerTest {
 	@Test public void sendCoordinates() throws IOException, InterruptedException {
 		pl1.spawn(new Point2D.Float(100, 100));
 		nl1.sendSpawn();
-		Thread.sleep(50);
 
 		// Päivitetään pl1:n paikka
 		nl1.physics.update(100, pl1);
@@ -88,6 +89,48 @@ public class NetListenerTest {
 		Player pl = nl2.physics.getPlayer(pl1.getID());
 		assertNotNull("Pelaajan tiedot löydyttävä.", pl);
 		assertEquals("Sijainnin päivityttävä.", pl.getLoc(), pl1.getLoc());
-		assertEquals("Nopeusvektorin päivityttävä", pl.getSpeedVec(), pl1.getSpeedVec());
+		assertEquals("Nopeusvektorin päivityttävä.", pl.getSpeedVec(), pl1.getSpeedVec());
+	}
+
+	/** Luo ammuksen nl2:lla, lähettää siitä tiedon nl1:lle ja lähettää
+	 * nl1:ltä nl2:lle tiedon, että ammus osui pelaajaan pl1. */
+	@Test public void sendBullet() throws IOException, InterruptedException {
+		pl1.spawn(new Point2D.Float(100,100));
+		nl1.sendSpawn();
+
+		pl2.spawn(new Point2D.Float(100,200));
+		nl2.sendSpawn();
+
+		Bullet b = new Bullet(100, 180, 0, -50, pl2.getID(), 10);
+		nl2.physics.addBullet(b);
+		nl2.shoot(b);
+
+	// Lähetään ammus nl2 -> nl1
+		nl2.updateChanges();
+		Thread.sleep(50);
+
+		// Tarkistetaan, että ammus saapui perille
+		assertEquals("Ammuksen olisi pitänyt tulla perille.", nl1.physics.getBullets().size(), 1);
+		Bullet receivedBullet = nl1.physics.getBullets().get(0);
+		assertEquals(receivedBullet.getShooter(), pl2.getID());
+		assertEquals(receivedBullet.getID(), 10);
+
+		nl1.hit(receivedBullet);
+		nl1.updateChanges();
+		Thread.sleep(50);
+
+		// Tarkistetaan, että tieto osumasta saapui perille
+		assertEquals("Ammuksen olisi pitänyt poistua.", nl2.physics.getBullets().size(), 0);
+	}
+
+	/** Poistaa nl1:een liittyneen etäpelaajan pelistä. */
+	@Test public void deletePlayer() {
+		NetPlayer pl = nl1.players.get(0);
+		nl1.deletePlayer(pl);
+		assertEquals("Ainoa etäpelaaja poistettu.", nl1.players.size(), 0);
+	}
+	/** Yrittää poistaa null-pelaajan pelistä. */
+	@Test(expected=NullPointerException.class) public void deleteNullPlayer() {
+		nl1.deletePlayer(null);
 	}
 }
