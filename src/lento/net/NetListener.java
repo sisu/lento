@@ -27,9 +27,10 @@ public class NetListener implements Runnable, PhysicsObserver {
 
 	/** Aikaraja, joka yhdistämistä yrittäessä odotetaan ennen luovuttamista. */
 	static final int CONNECT_TIMEOUT = 2000;
-
 	/** Aikaraja, joka peliin liittyessä odotetaan ennen luovuttamista. */
 	static final int JOIN_TIMEOUT = 2000;
+	/** Aikaraja, joka odotetaan normaaleissa verkon lukuoperaatioissa ennen luovuttamista. */
+	static final int READ_TIMEOUT = 2000;
 
 	static final int TCP_GET_AREA_INFO = 0x01;
 	static final int TCP_GET_PLAYER_INFO = 0x02;
@@ -85,6 +86,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	 */
 	boolean done=false;
 
+
 	/** Luo uuden NetPlayer-olion.
 	 * @param physics Tämän pelin tilasta huolehtiva GamePhysics-olio
 	 * @param localPlayer paikallisen pelaajan Player-olio
@@ -94,6 +96,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 		this.localPlayer = localPlayer;
 		tcpSocket = openServerSocket();
 	}
+
 	/** Yhdistää verkossa käynnissä olevaan peliin.
 	 * Tämä metodi hakee verkosta kaikki pelin tiedot ja päivittää
 	 * ne @physics-oliolle. Metodista palaudutaan vasta, kun
@@ -108,6 +111,8 @@ public class NetListener implements Runnable, PhysicsObserver {
 
 		Socket socket = new Socket();
 		socket.connect(new InetSocketAddress(addr,port), CONNECT_TIMEOUT);
+
+		socket.setSoTimeout(READ_TIMEOUT);
 
 		if (!socket.isConnected())
 			throw new IOException("Yhteyden muodostus etäkoneeseen epäonnistui");
@@ -127,7 +132,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			try {
 				s = new ServerSocket(port);
 			} catch(BindException e) {
-				System.out.println("Failed binding to port "+port);
+				System.out.println("Kiinnitys porttiin "+port+" epäonnistui");
 				s = null;
 				++port;
 			}
@@ -183,7 +188,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Poistaa etäpelaajan pelistä.
 	 * @param player poistettava pelaaja
 	 */
-	void deletePlayer(NetPlayer player) {
+	synchronized void deletePlayer(NetPlayer player) {
 		physics.deletePlayer(player);
 		players.remove(player);
 		playerTable.remove(getSocketAddress(player));
@@ -196,6 +201,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	private int handleOwnJoin(Socket initial) throws IOException {
 		DataOutputStream out = new DataOutputStream(initial.getOutputStream());
 		DataInputStream in = new DataInputStream(initial.getInputStream());
+
 		getAreaInfo(in,out);
 		getPlayerInfo(in,out,initial);
 		for(NetPlayer p : players)
@@ -312,7 +318,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 	/** Vapauttaa kaikki tämän olion ja sen hallitsemien NetPlayer-olioiden
 	 * käytössä olevat resurssit.
 	 */
-	public void cleanUp() throws IOException {
+	public synchronized void cleanUp() throws IOException {
 		done = true;
 		tcpSocket.close();
 		udpSocket.close();

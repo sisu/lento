@@ -42,7 +42,7 @@ public class GamePhysics {
 	 * kohdassa a, niin playerIndex[i] = a. Tämän taulukon avulla
 	 * löydetään siis pelaaja ID-numeron perusteella vakioajassa.
 	 */
-	private int[] playerIndex = new int[256];
+	private int[] playerIndex = new int[128];
 
 	// FIXME: älä varaa koko taulukkoa? (vie 64Mt muistia)
 	/** Taulukko siitä, missä indeksissä mikäkin kunkin pelaajan ampuma 
@@ -50,7 +50,7 @@ public class GamePhysics {
 	 * Jos ammuksen x ampujan ID on a ja ammus-ID b, niin pätee:
 	 * bulletIndex[a][b] = x.
 	 */
-	private int[][] bulletIndex = new int[256][65536];
+	private int[][] bulletIndex = new int[128][65536];
 
 	/** Pelifysiikan tapahtumia tarkkailemaan asetettu olio. */
 	PhysicsObserver observer;
@@ -302,6 +302,8 @@ public class GamePhysics {
 	 * @param pl pelistä poistuva pelaaja
 	 */
 	public synchronized void deletePlayer(Player pl) {
+		if (pl.id<0 || pl.id>127)
+			return;
 		int i = playerIndex[pl.id];
 		int size = players.size();
 

@@ -66,6 +66,7 @@ public class TestGamePhysics {
 		// tarkista, että luoduilla ammuksilla on oikeat ID-numerot
 		ArrayList<Bullet> bullets = physics.getBullets();
 
+		assertEquals(bullets.size(), 2);
 		assertEquals(bullets.get(0).getID(), nextID);
 		assertEquals(bullets.get(1).getID(), nextID+1);
 	}

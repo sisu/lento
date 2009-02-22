@@ -39,6 +39,7 @@
 			<batchtest todir="testresults">
 				<fileset dir="test">
 					<include name="lento/"/>
+					<exclude name="lento/gameui/"/>
 				</fileset>
 			</batchtest>
 		</junit>

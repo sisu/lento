@@ -48,10 +48,14 @@ class NetPlayer extends Player implements Runnable {
 		try {
 			in = new DataInputStream(socket.getInputStream());
 			while(socket.isConnected()) {
-				System.out.println("Waiting for next packet...");
+				socket.setSoTimeout(0); // poista timeout käytöstä
+//				System.out.println("Waiting for next packet...");
 				int packetType = in.read();
-				if (packetType == -1) break;
-				System.out.println("got byte: "+packetType);
+				if (packetType == -1)
+					break;
+//				System.out.println("got byte: "+packetType);
+				socket.setSoTimeout(NetListener.READ_TIMEOUT);
+
 				handleTCPPacket(packetType, in);
 			}
 		} catch(Exception e) {
