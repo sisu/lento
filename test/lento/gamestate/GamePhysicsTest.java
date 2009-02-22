@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * Testaa GamePhysics-luokaa metodeita.
  */
-public class TestGamePhysics {
+public class GamePhysicsTest {
 
 	private GamePhysics physics;
 	private Player pl1;
@@ -126,6 +126,27 @@ public class TestGamePhysics {
 		assertTrue("Ammuksen olisi pitänyt kadota", physics.getBullets().isEmpty());
 	}
 
+	/** Tarkistaa, että ammus osuu pelaajaan, mutta pelaaja ei kuole, kun
+	 * osumapisteitä on tarpeeksi jäljellä.
+	 */
+	@Test public void bulletHitPlayer() {
+		// Ylöspäin nouseva ammus pl2:n alapuolella
+		Point2D.Float loc = pl2.location;
+		Bullet b = new Bullet(loc.x, loc.y-GamePhysics.BULLET_HIT_RANGE*2, 0, 100, pl2.id, 10);
+		physics.addBullet(b);
+
+		pl2.alive = true;
+		pl2.health = GamePhysics.BULLET_DAMAGE*2;
+
+		// ammus ehtii osua pelaajaan pl2 ja tappaa hänet
+		physics.update(1.0f, pl2);
+
+		assertTrue("Pelaajan ei pidä kuolla", pl2.alive);
+		assertTrue("Ammuksen olisi pitänyt kadota", physics.getBullets().isEmpty());
+
+		assertEquals("Itseensä osumista ei lasketa tehtyyn vahinkoon", pl2.damageDone, 0);
+	}
+
 	/** Tarkistaa, että pelaaja kuolee osuessaan ammukseen, kun pelaajan
 	 * osumapisteet ovat riittävän vähissä.
 	 */
@@ -146,6 +167,8 @@ public class TestGamePhysics {
 
 		assertEquals("Tappomäärän olisi pitänyt kasvaa", pl1.kills, 1);
 		assertEquals("Kuolinmäärän olisi pitänyt kasvaa", pl2.deaths, 1);
+
+		assertEquals("Tehty vahinko huomioitava", pl1.damageDone, GamePhysics.BULLET_DAMAGE);
 	}
 
 	/** Yrittää poistaa pelistä null-pelaajan. */

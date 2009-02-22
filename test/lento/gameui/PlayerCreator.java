@@ -9,6 +9,10 @@ import java.awt.*;
  */
 public class PlayerCreator {
 
+	/** Tästä luokasta ei ole tarkoitus tehdä instansseja. */
+	private PlayerCreator() {
+	}
+
 	/** Luo uuden Player-olion.
 	 *
 	 * @param name pelaajan nimi

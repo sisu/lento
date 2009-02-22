@@ -14,7 +14,7 @@ import lento.gameui.PlayerCreator;
 /**
  * Testaa NetListener-luokan metodeja.
  */
-public class TestNetListener {
+public class NetListenerTest {
 
 	/** Testeissä käytetyt NetListener-oliot. */
 	NetListener nl1, nl2;

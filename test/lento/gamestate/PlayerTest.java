@@ -9,7 +9,7 @@ import java.awt.*;
 /**
  * Testaa Player-luokan metodeja.
  */
-public class TestPlayer {
+public class PlayerTest {
 
 	/** Testeissä käytetyt pelaaja-oliot. */
 	private Player p1,p2;
