@@ -54,11 +54,20 @@ public class AreaGeometry {
 			Point2D.Float c = e.start;
 			Point2D.Float d = e.end;
 
+			/* Tarkistetaan, leikkaavatko janat a-b ja c-d.
+			 * Tarkistus tehdään olettamalla vuorotellen kummallekin janallee, että jana
+			 * jatkuu äärettömänä suorana, ja tarkistamalla, leikkaako toinen jana suoran.
+			 * Janat leikkaavat toisensa joss vastaus on kummankin janan kohdalla kyllä.
+			 *
+			 * Janan ja suoran leikkauksen tarkistus tehdään ristitulolla:
+			 * suoran suuntavektorin ja suoralta janan kärkipisteesein menevien
+			 * vektorien ristitulojen etumerkit ovat eri joss pisteet ovat eri
+			 * puolilla janaa.
+			 */
 			if (crosspf(a.x,a.y,b.x,b.y,c.x,c.y)*crosspf(a.x,a.y,b.x,b.y,d.x,d.y) <= 0
 				&& crosspf(c.x,c.y,d.x,d.y,a.x,a.y)*crosspf(c.x,c.y,d.x,d.y,b.x,b.y) <= 0)
 			{
 				// Törmäys tapahtui, määritetään sen paikka
-	//			System.out.println("hit");
 				float dax=b.x-a.x;
 				float day=b.y-a.y;
 				float dbx=d.x-c.x;
