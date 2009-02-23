@@ -105,7 +105,7 @@ class GameFrame extends JFrame {
 		else
 			midX = Math.max(Math.min(midX, BORDER_SIZE), w-areaW-BORDER_SIZE);
 		if (h >= areaH)
-			midY = h2-areaH/2;
+			midY = h2-areaH/2+BORDER_SIZE/2;
 		else 
 			midY = Math.max(Math.min(midY, 2*BORDER_SIZE), h-areaH-BORDER_SIZE);
 
@@ -116,6 +116,7 @@ class GameFrame extends JFrame {
 			g2.setColor(cp.color);
 			g2.fill(cp);
 		}
+//		System.out.printf("%d %d\n", areaW, areaH);
 
 		// Piirrä kentän reunat
 		g2.setColor(geometry.getBorderColor());

@@ -150,7 +150,11 @@ public class AreaGeometry {
 						p.addPoint(x,y);
 					}
 					polygons.add(p);
-					addEdges(p);
+					try {
+						addEdges(p);
+					} catch(IllegalArgumentException e) {
+						readError(file, lineCount, e.getMessage());
+					}
 				}
 			}
 			// Lisää kentän reunat särmiin
@@ -219,6 +223,8 @@ public class AreaGeometry {
 		int x0=p.xpoints[0], y0=p.ypoints[0];
 		for(int i=2; i<p.npoints; ++i)
 			area += crossp(x0,y0,p.xpoints[i-1],p.ypoints[i-1],p.xpoints[i],p.ypoints[i]);
+		if (area==0)
+			throw new IllegalArgumentException("Polygonin pinta-ala on 0.");
 		int direction = area<0 ? 1 : -1;
 
 		for(int i=1; i<p.npoints; ++i) {

@@ -520,7 +520,7 @@ public class NetListener implements Runnable, PhysicsObserver {
 			out.write(TCP_PLAYER_DIE);
 			out.write(killer);
 			out.writeShort(damage);
-			System.out.printf("sent damage: %d\n", damage);
+//			System.out.printf("sent damage: %d\n", damage);
 			sendTCPPacket(outBuffer.getData(), outBuffer.size());
 		} catch(IOException e) {
 			e.printStackTrace();

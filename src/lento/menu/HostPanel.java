@@ -2,6 +2,7 @@ package lento.menu;
 
 import javax.swing.*;
 import java.awt.event.*;
+import javax.swing.filechooser.*;
 
 /**
  * Paneeli, jonka kautta voi luoda uuden pelin.
@@ -44,6 +45,8 @@ class HostPanel extends JPanel implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		if (e.getActionCommand().equals("browse")) {
 			JFileChooser fc = new JFileChooser("./lev/");
+			FileNameExtensionFilter filter = new FileNameExtensionFilter("Kenttätiedosto (lev)", "lev");
+			fc.setFileFilter(filter);
 			int retVal = fc.showOpenDialog(this);
 			if (retVal==JFileChooser.APPROVE_OPTION) {
 				String name = fc.getSelectedFile().getAbsolutePath();
