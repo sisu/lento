@@ -94,32 +94,34 @@ public class NetListenerTest {
 
 	/** Luo ammuksen nl2:lla, lähettää siitä tiedon nl1:lle ja lähettää
 	 * nl1:ltä nl2:lle tiedon, että ammus osui pelaajaan pl1. */
-	@Test public void sendBullet() throws IOException, InterruptedException {
+	@Test public void sendBulletHit() throws IOException, InterruptedException {
 		pl1.spawn(new Point2D.Float(100,100));
 		nl1.sendSpawn();
 
 		pl2.spawn(new Point2D.Float(100,200));
 		nl2.sendSpawn();
 
+		// luodaan ammus nl2:lla
 		Bullet b = new Bullet(100, 180, 0, -50, pl2.getID(), 10);
 		nl2.physics.addBullet(b);
 		nl2.shoot(b);
 
-	// Lähetään ammus nl2 -> nl1
+		// Lähetään ammus nl2 -> nl1
 		nl2.updateChanges();
 		Thread.sleep(50);
 
-		// Tarkistetaan, että ammus saapui perille
+		// Tarkistetaan, että ammus saapui perille nl1:llä
 		assertEquals("Ammuksen olisi pitänyt tulla perille.", nl1.physics.getBullets().size(), 1);
 		Bullet receivedBullet = nl1.physics.getBullets().get(0);
 		assertEquals(receivedBullet.getShooter(), pl2.getID());
 		assertEquals(receivedBullet.getID(), 10);
 
+		// lähetä tieto osumisesta nl1 -> nl2
 		nl1.hit(receivedBullet);
 		nl1.updateChanges();
 		Thread.sleep(50);
 
-		// Tarkistetaan, että tieto osumasta saapui perille
+		// Tarkistetaan, että tieto osumasta saapui perille nl2:lla
 		assertEquals("Ammuksen olisi pitänyt poistua.", nl2.physics.getBullets().size(), 0);
 	}
 
