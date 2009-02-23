@@ -55,4 +55,45 @@ public class PlayerTest {
 
 		assertTrue("Suhteen ollessa sama pelaajien vertailun oltava 0", p1.compareTo(p2) == 0);
 	}
+
+	// Vertailufunktion erikoistapaukset
+
+	/** Testaa vertailua, kun vertailtava 1 ei ole tappanut ketään. */
+	@Test public void noOwnKillsCompare() {
+		p1.kills=0;
+		p2.kills=1;
+		assertTrue(p1.compareTo(p2) > 0);
+	}
+	/** Testaa vertailua, kun vertailtava 2 ei ole tappanut ketään. */
+	@Test public void noOtherKillsCompare() {
+		p1.kills=1;
+		p2.kills=0;
+		assertTrue(p1.compareTo(p2) < 0);
+	}
+	/** Testaa vertailua, kun vertailtava 1 ei ole kuollut kertaakaan. */
+	@Test public void noOwnDeathsCompare() {
+		p1.deaths=0;
+		p2.deaths=1;
+		assertTrue(p1.compareTo(p2)<0);
+	}
+	/** Testaa vertailua, kun vertailtava 2 ei ole kuollut kertaakaan. */
+	@Test public void noOtherDeathsCompare() {
+		p1.deaths=1;
+		p2.deaths=0;
+		assertTrue(p1.compareTo(p2)>0);
+	}
+	/** Testaa vertailua, kun kumpikaan vertailtava ei ole tappanut ketään. */
+	@Test public void bothZeroKillsCompare() {
+		p1.deaths=1;
+		p2.deaths=2;
+		assertTrue(p1.compareTo(p2)<0);
+		assertTrue(p2.compareTo(p1)>0);
+	}
+	/** Testaa vertailua, kun kumpikaan vertailtava ei ole kuollut kertaakaan. */
+	@Test public void bothZeroDeathsCompare() {
+		p1.kills=1;
+		p2.kills=2;
+		assertTrue(p1.compareTo(p2)>0);
+		assertTrue(p2.compareTo(p1)<0);
+	}
 }
