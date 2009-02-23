@@ -206,6 +206,18 @@ public class Player implements Comparable<Player> {
 	 *         olion suhde pienempi, suurempi vai yhtäsuuri kuin vertailtavan
 	 */
 	public int compareTo(Player pl) {
+		if (kills==0 && pl.kills>0)
+			return 1;
+		if (kills>0 && pl.kills==0)
+			return -1;
+		if (deaths==0 && pl.deaths>0)
+			return -1;
+		if (deaths>0 && pl.deaths==0)
+			return 1;
+		if (kills==0 && pl.kills==0)
+			return deaths-pl.deaths;
+		if (deaths==0 && pl.deaths==0)
+			return pl.kills-kills;
 		return (int)((long)pl.kills*deaths - (long)pl.deaths*kills);
 	}
 }
