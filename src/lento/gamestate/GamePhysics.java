@@ -238,7 +238,9 @@ public class GamePhysics {
 	public synchronized void addBullet(Bullet b) {
 		Player pl = players.get(playerIndex[b.getShooter()]);
 		bulletIndex[pl.id][b.getID()] = bullets.size();
-		bullets.add(b);
+		synchronized(bullets) {
+			bullets.add(b);
+		}
 	}
 
 	/** Generoi ammuksia paikalliselle pelaajalle.
